@@ -19,7 +19,7 @@ func Search(completion: (result: [String]) -> Void) {
 
     // set an endpoint you can check out the docs via:
     // https://dev.twitter.com/rest/reference/get/search/tweets
-    let statusesShowEndpoint = "https://api.twitter.com/1.1/search/tweets.json"
+    let RESTAPIEndpoint = "https://api.twitter.com/1.1/search/tweets.json"
 
     // setup the params for the request
     let params = ["q": "#NETFLIX OR #BBCOne", "count": "50"]
@@ -36,7 +36,7 @@ func Search(completion: (result: [String]) -> Void) {
         if (session != nil) {
 
             // woohoo we have a session - let's get crazy
-            let request = Twitter.sharedInstance().APIClient.URLRequestWithMethod("GET", URL:  statusesShowEndpoint, parameters: params, error:&clientError)
+            let request = Twitter.sharedInstance().APIClient.URLRequestWithMethod("GET", URL:  RESTAPIEndpoint, parameters: params, error:&clientError)
 
             // if the request is ready to rock and roll
             if request != nil {
