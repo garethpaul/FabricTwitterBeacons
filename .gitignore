@@ -17,4 +17,6 @@ DerivedData
 *.hmap
 *.ipa
 *.xcuserstate
+
 Info.plist
+settee/Info.plist
