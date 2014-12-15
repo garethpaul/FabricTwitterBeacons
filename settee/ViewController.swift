@@ -12,11 +12,13 @@ import TwitterKit
 
 class ViewController: UITableViewController, CLLocationManagerDelegate, TWTRTweetViewDelegate  {
 
-    
-
+    // setup Variables
     var lView: UIImageView!
     var container: UIView!
     var label: UILabel!
+
+    let activityIndicator: UIActivityIndicatorView = UIActivityIndicatorView(activityIndicatorStyle: UIActivityIndicatorViewStyle.Gray)
+    @IBOutlet var textLabel: UILabel!
 
     // setup a 'container' for Tweets
     var tweets: [TWTRTweet] = [] {
@@ -32,11 +34,9 @@ class ViewController: UITableViewController, CLLocationManagerDelegate, TWTRTwee
     var isLoadingTweets = false
     var prev: Int?
 
+    // Setup iBeacon
     let locationManager = CLLocationManager()
     let region = CLBeaconRegion(proximityUUID: NSUUID(UUIDString: "2F234454-CF6D-4A0F-ADF2-F4911BA9FFA6"), identifier: "couch")
-    let activityIndicator: UIActivityIndicatorView = UIActivityIndicatorView(activityIndicatorStyle: UIActivityIndicatorViewStyle.Gray)
-
-    @IBOutlet var textLabel: UILabel!
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -59,7 +59,7 @@ class ViewController: UITableViewController, CLLocationManagerDelegate, TWTRTwee
         label.frame.origin.y = (self.view.frame.size.height/2) - 100
         self.view.addSubview(label)
 
-
+        // Setup navigation bar
         lView = UIImageView(frame: CGRectMake(0, 0, 65, 35))
         lView.image = UIImage(named: "settee")?.imageWithRenderingMode(.AlwaysTemplate)
         lView.tintColor = toColor("ffffff")
@@ -82,6 +82,7 @@ class ViewController: UITableViewController, CLLocationManagerDelegate, TWTRTwee
         activityIndicator.startAnimating()
         self.view.addSubview( activityIndicator )
 
+        // Begin the magic with iBeacons
         locationManager.delegate = self
 
         if (CLLocationManager.authorizationStatus() != CLAuthorizationStatus.Authorized) {
@@ -129,37 +130,59 @@ class ViewController: UITableViewController, CLLocationManagerDelegate, TWTRTwee
         // Dispose of any resources that can be recreated.
     }
 
+
+    // This is where all the magic happens for determing whether to render the Tweets
     func locationManager(manager: CLLocationManager!, didRangeBeacons beacons: [AnyObject]!, inRegion region: CLBeaconRegion!) {
         let knownBeacons = beacons.filter{ $0.proximity != CLProximity.Unknown }
         if (knownBeacons.count > 0) {
             let closestBeacon = knownBeacons[0] as CLBeacon
 
-
-
+            // Set the proximity
             let proximity = closestBeacon.proximity.rawValue
-            println(proximity)
 
+            // If the proximity does not equal the prev value set the user has become closer or further away from the beacon
             if prev != closestBeacon.proximity.rawValue {
 
-
+                // If the proximity is very close - we should show some TV tweets
                 if (proximity == 1){
+
                     // Create a single prototype cell for height calculations.
                     self.prototypeCell = TWTRTweetTableViewCell(style: .Default, reuseIdentifier: tweetTableCellReuseIdentifier)
 
                     // Register the identifier for TWTRTweetTableViewCell.
                     self.tableView.registerClass(TWTRTweetTableViewCell.self, forCellReuseIdentifier: tweetTableCellReuseIdentifier)
-                    // Setup table data
+
+                    // Send a request to the Search API. Check out TVSearchAPI.swift for details..
                     Search() { (result: [String]) in
+
+                        // Load the array back to display the Tweets
                         self.loadTweets(result)
                     }
-                } else if proximity == 2 {
+
+
+                }
+
+                // If the proximity is further away.
+                else if proximity == 2 {
+
+                    // If the previous value was 1 aka close then we need to start again remove the tweets and wait for the 
+                    // user to come back in range.
                     if prev == 1 {
+
+                        // remove the Label from View
                         label.removeFromSuperview()
+
+                        // remove the activityIndication from the View
                         activityIndicator.removeFromSuperview()
+
+                        // Lets set an empty array for the tweets
                         self.tweets = []
+
+                        // Get going and setup the View Again
                         setupView()
                     }
                 }
+
                 // set previous value
                 prev = proximity
 
@@ -167,10 +190,16 @@ class ViewController: UITableViewController, CLLocationManagerDelegate, TWTRTwee
             }
 
 
-            // if the tweets are loaded
+            // if the tweets have been loaded
             if (tweets.count >= 1) {
+
+                // Stop animating the spinner
                 activityIndicator.stopAnimating()
+
+                // Remove the spinner
                 activityIndicator.removeFromSuperview()
+
+                // Remove the label
                 label.removeFromSuperview()
 
             }
