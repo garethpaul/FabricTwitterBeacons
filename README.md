@@ -1,5 +1,8 @@
 # README
 
+<!-- README-OVERVIEW-IMAGE -->
+![Project overview](docs/readme-overview.svg)
+
 ####An example iOS App using Fabric with the REST API provided by TwitterKit. 
 
 You will need:
@@ -7,7 +10,6 @@ You will need:
 1.  iBeacon and UUID handy to use. 
 2.  a physical phone to use
 3.  a fabric.io account
-
 
 ##### Getting Started
 
