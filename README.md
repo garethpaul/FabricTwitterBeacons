@@ -80,4 +80,4 @@ Keep changes small and tied to the project that is already present in this repos
 
 Prior README summary:
 
-> README <!-- README-OVERVIEW-IMAGE --> An example iOS App using Fabric with the REST API provided by TwitterKit. You will need: 1.  iBeacon and UUID handy to use. 2.  a physical phone to use 3.  a fabric.io account Getting Started
+> README An example iOS App using Fabric with the REST API provided by TwitterKit. You will need: 1.  iBeacon and UUID handy to use. 2.  a physical phone to use 3.  a fabric.io account Getting Started
