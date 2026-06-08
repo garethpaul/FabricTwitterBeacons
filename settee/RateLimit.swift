@@ -8,6 +8,14 @@
 
 import Foundation
 
-func helper(name: String){
-    topN = 
+func limitTweetIDs(tweetIDs: [String], maxCount: Int) -> [String] {
+    if maxCount <= 0 {
+        return []
+    }
+
+    if tweetIDs.count <= maxCount {
+        return tweetIDs
+    }
+
+    return Array(tweetIDs[0..<maxCount])
 }

@@ -13,7 +13,9 @@ This README is based on the checked-in source, manifests, scripts, and repositor
 
 - `README.md` - project overview and local usage notes
 - `Fabric.framework` - source or example code
+- `Makefile` - local maintenance check entry point
 - `SECURITY.md` - security reporting and disclosure guidance
+- `scripts/check-baseline.sh` - static baseline verification for Fabric secrets and beacon logging
 - `settee` - source or example code
 - `settee.xcodeproj` - Xcode project file
 - `setteeTests` - source or example code
@@ -46,16 +48,31 @@ The setup commands above are derived from repository files. Legacy mobile, Pytho
 ## Running or Using the Project
 
 - Open `settee.xcodeproj` in Xcode, choose the app or sample scheme, and run it on the matching simulator/device.
+- Configure `FABRIC_API_KEY` and `FABRIC_BUILD_SECRET` in your local Xcode scheme or build environment if you need the legacy Fabric upload phase. The checked-in project skips Fabric upload when those variables are absent.
+- Beacon ranging is a physical-device workflow. Verify proximity behavior on real iOS hardware with a test beacon before relying on it.
 
 ## Testing and Verification
 
-- Xcode's test action or `xcodebuild test` with the appropriate scheme and destination
+Run the repository baseline:
+
+```bash
+make check
+```
+
+The baseline verifies that Fabric credentials are not committed, raw beacon
+payloads are not logged, local credential files stay ignored, and the Xcode
+project can be listed when `xcodebuild` is installed.
+
+For functional verification, use Xcode's test action or `xcodebuild test` with
+the appropriate scheme and destination.
 
 When the required SDK or runtime is unavailable, use static checks and source review first, then verify on a machine that has the matching platform toolchain.
 
 ## Configuration and Secrets
 
 - Detected references to Twitter. Keep API keys, OAuth credentials, tokens, and account-specific values in local configuration only.
+- Keep `FABRIC_API_KEY`, `FABRIC_BUILD_SECRET`, Twitter credentials, signing identities, and local `.xcconfig` files out of source control.
+- Treat iBeacon UUIDs and proximity behavior as sensitive physical-device configuration. Do not log beacon payloads or user proximity transitions without a reviewed need.
 
 ## Security and Privacy Notes
 
@@ -69,6 +86,7 @@ When the required SDK or runtime is unavailable, use static checks and source re
 ## Maintenance Notes
 
 - This looks like an Apple platform project or sample. Xcode, Swift, CocoaPods, and deployment target versions may need to match the original project era.
+- Run `make check` before pushing changes that touch the Xcode project, Fabric/Twitter integration, or beacon code.
 - See `SECURITY.md` for vulnerability reporting and safe research guidance.
 - See `VISION.md` for project direction and contribution guardrails.
 

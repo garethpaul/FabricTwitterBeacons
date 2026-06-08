@@ -22,6 +22,17 @@ Priority:
 - Avoid committing Fabric, Twitter, or signing credentials
 - Keep physical-device requirements documented
 
+Current baseline:
+
+- `scripts/check-baseline.sh` verifies that the Fabric run script reads
+  `FABRIC_API_KEY` and `FABRIC_BUILD_SECRET` from the local environment instead
+  of committed identifiers.
+- Raw beacon payloads are not logged from the app delegate.
+- Local `.env` and `.xcconfig` files stay ignored because they may contain
+  Fabric, Twitter, signing, or beacon configuration.
+- Xcode project listing is attempted when `xcodebuild` is installed; otherwise
+  static checks remain the minimum verification path.
+
 Next priorities:
 
 - Add clearer README verification steps for beacon and Twitter behavior

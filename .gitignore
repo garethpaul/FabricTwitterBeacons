@@ -20,3 +20,9 @@ DerivedData
 
 Info.plist
 settee/Info.plist
+
+# Local credentials and per-machine Xcode configuration
+.env
+.env.*
+*.xcconfig
+!*.xcconfig.example
