@@ -39,7 +39,6 @@ Canonical security policy and reporting:
 
 - [`SECURITY.md`](SECURITY.md)
 
-
 Beacon proximity and Twitter identity are sensitive. Changes should avoid
 logging device location, beacon IDs, user tokens, or account details.
 
