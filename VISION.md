@@ -1,5 +1,8 @@
 ## Fabric Twitter Beacons Vision
 
+This document explains the current state and direction of the project.
+Project overview and developer docs: [`README.md`](README.md)
+
 Fabric Twitter Beacons is an iOS sample that combines iBeacon proximity with
 TwitterKit/Fabric API calls.
 
