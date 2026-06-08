@@ -46,3 +46,6 @@ Any tweet or API action should remain explicit and user-controlled.
 - Silent tweeting or account actions
 - Background proximity tracking without privacy notes
 - Dependency migrations bundled with behavior changes
+
+This list is a roadmap guardrail, not a permanent rule.
+Strong user demand and strong technical rationale can change it.
