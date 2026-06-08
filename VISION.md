@@ -40,7 +40,7 @@ logging device location, beacon IDs, user tokens, or account details.
 
 Any tweet or API action should remain explicit and user-controlled.
 
-## What We Will Not Merge For Now
+## What We Will Not Merge (For Now)
 
 - Hardcoded real Twitter, Fabric, or beacon credentials
 - Silent tweeting or account actions
