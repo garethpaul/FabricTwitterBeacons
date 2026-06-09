@@ -4,6 +4,7 @@ set -eu
 ROOT_DIR=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
 PROJECT="$ROOT_DIR/settee.xcodeproj/project.pbxproj"
 PLAN="$ROOT_DIR/docs/plans/2026-06-08-fabric-twitter-beacons-maintenance-baseline.md"
+TWEET_LIMIT_PLAN="$ROOT_DIR/docs/plans/2026-06-08-twitter-search-result-limit.md"
 
 require_file() {
   path=$1
@@ -26,6 +27,7 @@ for path in \
   "settee/ViewController.swift" \
   "settee/TVSearchAPI.swift" \
   "setteeTests/setteeTests.swift" \
+  "docs/plans/2026-06-08-twitter-search-result-limit.md" \
   "docs/plans/2026-06-08-fabric-twitter-beacons-maintenance-baseline.md"; do
   require_file "$path"
 done
@@ -61,7 +63,8 @@ if [ "$beacon_nil_guards" -lt 2 ]; then
 fi
 
 if grep -Fq "topN =" "$ROOT_DIR/settee/RateLimit.swift" ||
-  ! grep -Fq "limitTweetIDs" "$ROOT_DIR/settee/RateLimit.swift"; then
+  ! grep -Fq "limitTweetIDs" "$ROOT_DIR/settee/RateLimit.swift" ||
+  ! grep -Fq "completion(result: limitTweetIDs(tweetArray, maxCount: 20))" "$ROOT_DIR/settee/TVSearchAPI.swift"; then
   printf '%s\n' "RateLimit.swift must keep a complete bounded-list helper." >&2
   exit 1
 fi
@@ -95,6 +98,11 @@ fi
 
 if ! grep -Fq "status: completed" "$PLAN"; then
   printf '%s\n' "Plan must be marked completed." >&2
+  exit 1
+fi
+
+if ! grep -Fq "status: completed" "$TWEET_LIMIT_PLAN"; then
+  printf '%s\n' "Tweet result limit plan must be marked completed." >&2
   exit 1
 fi
 

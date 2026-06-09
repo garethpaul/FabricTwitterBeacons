@@ -11,3 +11,5 @@
   Xcode is installed.
 - Removed raw beacon payload logging and replaced the unfinished rate-limit
   helper stub.
+- Applied the tweet ID limit helper to search results before loading embedded
+  tweets.

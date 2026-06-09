@@ -69,7 +69,7 @@ func Search(completion: (result: [String]) -> Void) {
                         }
 
                         // complete this magical request
-                        completion(result: tweetArray)
+                        completion(result: limitTweetIDs(tweetArray, maxCount: 20))
                     }
 
 
@@ -89,6 +89,5 @@ func Search(completion: (result: [String]) -> Void) {
         
     }
 }
-
 
 
