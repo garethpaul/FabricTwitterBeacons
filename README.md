@@ -62,8 +62,9 @@ make check
 The baseline verifies that Fabric credentials are not committed, raw beacon
 payloads and account-specific Twitter details are not logged, local credential
 files stay ignored, the app `Info.plist` carries location usage copy for beacon
-ranging, beacon-triggered tweet loads are bounded and non-overlapping, and the
-Xcode project can be listed when `xcodebuild` is installed.
+ranging, malformed Twitter search JSON completes with an empty result,
+beacon-triggered tweet loads are bounded and non-overlapping, and the Xcode
+project can be listed when `xcodebuild` is installed.
 
 For functional verification, use Xcode's test action or `xcodebuild test` with
 the appropriate scheme and destination.
@@ -81,6 +82,8 @@ When the required SDK or runtime is unavailable, use static checks and source re
   response details from beacon-triggered flows.
 - Beacon-triggered tweet loading skips empty search results and suppresses
   overlapping guest tweet-load requests.
+- Malformed Twitter search JSON completes with an empty result instead of
+  force-unwrapping the response body.
 
 ## Security and Privacy Notes
 

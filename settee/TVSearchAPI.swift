@@ -49,23 +49,41 @@ func Search(completion: (result: [String]) -> Void) {
                         // Setup a tweet array to contain all of those juicy tweets
                         var tweetArray = Array<String>()
 
+                        if data == nil {
+                            println("Twitter search response missing data")
+                            completion(result: [])
+                            return
+                        }
+
                         var jsonError : NSError?
                         let json : AnyObject? =
                         NSJSONSerialization.JSONObjectWithData(data,
                             options: nil,
                             error: &jsonError)
 
+                        if jsonError != nil {
+                            println("Twitter search response could not be parsed")
+                            completion(result: [])
+                            return
+                        }
+
                         // Iterate through JSON response and append the values to the TweetArray
-                        if let statuses = json!["statuses"] as? JSONArray {
+                        if let jsonDictionary = json as? JSONDictionary {
+                            if let statuses = jsonDictionary["statuses"] as? JSONArray {
 
-                            // For each tweet in the status block of the json request e.g. {"statuses": [tweets.........
-                            for tweet in statuses {
-                                if let id = tweet["id_str"] as?String{
+                                // For each tweet in the status block of the json request e.g. {"statuses": [tweets.........
+                                for tweet in statuses {
+                                    if let id = tweet["id_str"] as?String{
 
-                                    // Append the Tweet to the array
-                                    tweetArray.append(id)
+                                        // Append the Tweet to the array
+                                        tweetArray.append(id)
+                                    }
                                 }
                             }
+                        }
+                        else {
+                            completion(result: [])
+                            return
                         }
 
                         // complete this magical request
@@ -89,4 +107,3 @@ func Search(completion: (result: [String]) -> Void) {
         
     }
 }
-

@@ -7,6 +7,8 @@
 - Replaced raw Twitter error, username, and tweet-ID logs with generic
   diagnostics.
 - Added a static baseline guard and plan for the Twitter logging boundary.
+- Guarded malformed Twitter search JSON so the search flow completes with an
+  empty result instead of force-unwrapping the response.
 - Guarded beacon-triggered tweet loading against empty IDs and overlapping
   guest load requests.
 

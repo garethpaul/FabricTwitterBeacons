@@ -8,6 +8,7 @@ TWEET_LIMIT_PLAN="$ROOT_DIR/docs/plans/2026-06-08-twitter-search-result-limit.md
 TWITTER_LOG_PLAN="$ROOT_DIR/docs/plans/2026-06-09-twitter-log-boundary.md"
 LOCATION_PRIVACY_PLAN="$ROOT_DIR/docs/plans/2026-06-09-location-usage-plist.md"
 TWEET_LOAD_PLAN="$ROOT_DIR/docs/plans/2026-06-09-twitter-load-inflight-guard.md"
+TWITTER_JSON_PLAN="$ROOT_DIR/docs/plans/2026-06-09-twitter-search-json-guard.md"
 
 require_file() {
   path=$1
@@ -34,6 +35,7 @@ for path in \
   "setteeTests/setteeTests.swift" \
   "docs/plans/2026-06-09-location-usage-plist.md" \
   "docs/plans/2026-06-09-twitter-load-inflight-guard.md" \
+  "docs/plans/2026-06-09-twitter-search-json-guard.md" \
   "docs/plans/2026-06-09-twitter-log-boundary.md" \
   "docs/plans/2026-06-08-twitter-search-result-limit.md" \
   "docs/plans/2026-06-08-fabric-twitter-beacons-maintenance-baseline.md"; do
@@ -86,6 +88,12 @@ if ! grep -Fq "Twitter tweet load failed" "$ROOT_DIR/settee/ViewController.swift
   exit 1
 fi
 
+if ! grep -Fiq "malformed Twitter search JSON" "$ROOT_DIR/README.md" ||
+  ! grep -Fiq "malformed Twitter search JSON" "$ROOT_DIR/VISION.md"; then
+  printf '%s\n' "README and VISION must document malformed Twitter search JSON handling." >&2
+  exit 1
+fi
+
 beacon_nil_guards=$(grep -R "if beacons == nil" "$ROOT_DIR/settee" | wc -l | tr -d ' ')
 if [ "$beacon_nil_guards" -lt 2 ]; then
   printf '%s\n' "Beacon ranging callbacks must guard missing beacon arrays." >&2
@@ -96,6 +104,20 @@ if grep -Fq "topN =" "$ROOT_DIR/settee/RateLimit.swift" ||
   ! grep -Fq "limitTweetIDs" "$ROOT_DIR/settee/RateLimit.swift" ||
   ! grep -Fq "completion(result: limitTweetIDs(tweetArray, maxCount: 20))" "$ROOT_DIR/settee/TVSearchAPI.swift"; then
   printf '%s\n' "RateLimit.swift must keep a complete bounded-list helper." >&2
+  exit 1
+fi
+
+if grep -Fq 'json!["statuses"]' "$ROOT_DIR/settee/TVSearchAPI.swift" ||
+  ! grep -Fq "if let jsonDictionary = json as? JSONDictionary" "$ROOT_DIR/settee/TVSearchAPI.swift" ||
+  ! grep -Fq "completion(result: [])" "$ROOT_DIR/settee/TVSearchAPI.swift"; then
+  printf '%s\n' "Twitter search JSON parsing must avoid force-unwrapping malformed responses and complete with an empty result." >&2
+  exit 1
+fi
+
+if ! grep -Fq "lint: check" "$ROOT_DIR/Makefile" ||
+  ! grep -Fq "test: check" "$ROOT_DIR/Makefile" ||
+  ! grep -Fq "build: check" "$ROOT_DIR/Makefile"; then
+  printf '%s\n' "Makefile must expose lint, test, and build gates." >&2
   exit 1
 fi
 
@@ -157,6 +179,11 @@ fi
 
 if ! grep -Fq "status: completed" "$TWEET_LOAD_PLAN"; then
   printf '%s\n' "Tweet load in-flight guard plan must be marked completed." >&2
+  exit 1
+fi
+
+if ! grep -Fq "status: completed" "$TWITTER_JSON_PLAN"; then
+  printf '%s\n' "Twitter search JSON guard plan must be marked completed." >&2
   exit 1
 fi
 
