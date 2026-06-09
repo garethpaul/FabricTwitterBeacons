@@ -63,6 +63,7 @@ The baseline verifies that Fabric credentials are not committed, raw beacon
 payloads and account-specific Twitter details are not logged, local credential
 files stay ignored, the app `Info.plist` carries location usage copy for beacon
 ranging, malformed Twitter search JSON completes with an empty result,
+malformed Twitter REST JSON fails closed without force-unwrapping,
 beacon-triggered tweet loads are bounded and non-overlapping, and the Xcode
 project can be listed when `xcodebuild` is installed.
 
@@ -84,6 +85,8 @@ When the required SDK or runtime is unavailable, use static checks and source re
   overlapping guest tweet-load requests.
 - Malformed Twitter search JSON completes with an empty result instead of
   force-unwrapping the response body.
+- Malformed Twitter REST JSON in the legacy REST helper fails closed instead of
+  force-unwrapping the response body.
 
 ## Security and Privacy Notes
 
@@ -100,6 +103,8 @@ When the required SDK or runtime is unavailable, use static checks and source re
 - Run `make check` before pushing changes that touch the Xcode project, Fabric/Twitter integration, or beacon code.
 - See `SECURITY.md` for vulnerability reporting and safe research guidance.
 - See `VISION.md` for project direction and contribution guardrails.
+- See `docs/plans/2026-06-09-twitter-rest-json-guard.md` for the legacy REST
+  helper JSON parsing guard.
 
 ## Contributing
 

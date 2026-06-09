@@ -9,6 +9,7 @@ TWITTER_LOG_PLAN="$ROOT_DIR/docs/plans/2026-06-09-twitter-log-boundary.md"
 LOCATION_PRIVACY_PLAN="$ROOT_DIR/docs/plans/2026-06-09-location-usage-plist.md"
 TWEET_LOAD_PLAN="$ROOT_DIR/docs/plans/2026-06-09-twitter-load-inflight-guard.md"
 TWITTER_JSON_PLAN="$ROOT_DIR/docs/plans/2026-06-09-twitter-search-json-guard.md"
+TWITTER_REST_JSON_PLAN="$ROOT_DIR/docs/plans/2026-06-09-twitter-rest-json-guard.md"
 
 require_file() {
   path=$1
@@ -36,6 +37,7 @@ for path in \
   "docs/plans/2026-06-09-location-usage-plist.md" \
   "docs/plans/2026-06-09-twitter-load-inflight-guard.md" \
   "docs/plans/2026-06-09-twitter-search-json-guard.md" \
+  "docs/plans/2026-06-09-twitter-rest-json-guard.md" \
   "docs/plans/2026-06-09-twitter-log-boundary.md" \
   "docs/plans/2026-06-08-twitter-search-result-limit.md" \
   "docs/plans/2026-06-08-fabric-twitter-beacons-maintenance-baseline.md"; do
@@ -89,7 +91,9 @@ if ! grep -Fq "Twitter tweet load failed" "$ROOT_DIR/settee/ViewController.swift
 fi
 
 if ! grep -Fiq "malformed Twitter search JSON" "$ROOT_DIR/README.md" ||
-  ! grep -Fiq "malformed Twitter search JSON" "$ROOT_DIR/VISION.md"; then
+  ! grep -Fiq "malformed Twitter REST JSON" "$ROOT_DIR/README.md" ||
+  ! grep -Fiq "malformed Twitter search JSON" "$ROOT_DIR/VISION.md" ||
+  ! grep -Fiq "malformed Twitter REST JSON" "$ROOT_DIR/VISION.md"; then
   printf '%s\n' "README and VISION must document malformed Twitter search JSON handling." >&2
   exit 1
 fi
@@ -108,9 +112,13 @@ if grep -Fq "topN =" "$ROOT_DIR/settee/RateLimit.swift" ||
 fi
 
 if grep -Fq 'json!["statuses"]' "$ROOT_DIR/settee/TVSearchAPI.swift" ||
+  grep -Fq 'json!["statuses"]' "$ROOT_DIR/settee/RESTApi.swift" ||
   ! grep -Fq "if let jsonDictionary = json as? JSONDictionary" "$ROOT_DIR/settee/TVSearchAPI.swift" ||
+  ! grep -Fq "if let jsonDictionary = json as? JSONDictionary" "$ROOT_DIR/settee/RESTApi.swift" ||
+  ! grep -Fq "Twitter API response missing data" "$ROOT_DIR/settee/RESTApi.swift" ||
+  ! grep -Fq "Twitter API response could not be parsed" "$ROOT_DIR/settee/RESTApi.swift" ||
   ! grep -Fq "completion(result: [])" "$ROOT_DIR/settee/TVSearchAPI.swift"; then
-  printf '%s\n' "Twitter search JSON parsing must avoid force-unwrapping malformed responses and complete with an empty result." >&2
+  printf '%s\n' "Twitter search JSON parsing must avoid force-unwrapping malformed responses and fail closed." >&2
   exit 1
 fi
 
@@ -184,6 +192,16 @@ fi
 
 if ! grep -Fq "status: completed" "$TWITTER_JSON_PLAN"; then
   printf '%s\n' "Twitter search JSON guard plan must be marked completed." >&2
+  exit 1
+fi
+
+if ! grep -Fq "status: completed" "$TWITTER_REST_JSON_PLAN"; then
+  printf '%s\n' "Twitter REST JSON guard plan must be marked completed." >&2
+  exit 1
+fi
+
+if ! grep -Fq "make check" "$TWITTER_REST_JSON_PLAN"; then
+  printf '%s\n' "Twitter REST JSON guard plan must record make check verification." >&2
   exit 1
 fi
 

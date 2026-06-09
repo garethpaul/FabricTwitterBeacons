@@ -33,16 +33,28 @@ func Search(handle: String, completion: (result: String) -> Void) {
                 Twitter.sharedInstance().APIClient.sendTwitterRequest(request) {
                     (response, data, connectionError) -> Void in
                     if (connectionError == nil) {
+                        if data == nil {
+                            println("Twitter API response missing data")
+                            return
+                        }
+
                         var jsonError : NSError?
                         let json : AnyObject? =
                         NSJSONSerialization.JSONObjectWithData(data,
                             options: nil,
                             error: &jsonError)
 
-                        if let statuses = json!["statuses"] as? JSONArray {
-                            for tweet in statuses {
-                                if let id = tweet["id"] as?Int{
-                                    // Avoid logging tweet IDs from account-specific responses.
+                        if jsonError != nil {
+                            println("Twitter API response could not be parsed")
+                            return
+                        }
+
+                        if let jsonDictionary = json as? JSONDictionary {
+                            if let statuses = jsonDictionary["statuses"] as? JSONArray {
+                                for tweet in statuses {
+                                    if let id = tweet["id"] as?Int{
+                                        // Avoid logging tweet IDs from account-specific responses.
+                                    }
                                 }
                             }
                         }
@@ -64,5 +76,4 @@ func Search(handle: String, completion: (result: String) -> Void) {
         
     }
 }
-
 
