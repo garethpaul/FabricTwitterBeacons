@@ -1,5 +1,11 @@
 # Changes
 
+## 2026-06-09
+
+- Replaced raw Twitter error, username, and tweet-ID logs with generic
+  diagnostics.
+- Added a static baseline guard and plan for the Twitter logging boundary.
+
 ## 2026-06-08
 
 - Removed beacon proximity logging from the waiting screen and guarded beacon

@@ -116,7 +116,7 @@ class ViewController: UITableViewController, CLLocationManagerDelegate, TWTRTwee
                         self.tweets.append(i as TWTRTweet)
                     }
                 } else {
-                    println(error)
+                    println("Twitter tweet load failed")
                 }
                 
             }

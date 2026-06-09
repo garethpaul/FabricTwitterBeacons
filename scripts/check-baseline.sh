@@ -5,6 +5,7 @@ ROOT_DIR=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
 PROJECT="$ROOT_DIR/settee.xcodeproj/project.pbxproj"
 PLAN="$ROOT_DIR/docs/plans/2026-06-08-fabric-twitter-beacons-maintenance-baseline.md"
 TWEET_LIMIT_PLAN="$ROOT_DIR/docs/plans/2026-06-08-twitter-search-result-limit.md"
+TWITTER_LOG_PLAN="$ROOT_DIR/docs/plans/2026-06-09-twitter-log-boundary.md"
 
 require_file() {
   path=$1
@@ -26,7 +27,9 @@ for path in \
   "settee/RateLimit.swift" \
   "settee/ViewController.swift" \
   "settee/TVSearchAPI.swift" \
+  "settee/RESTApi.swift" \
   "setteeTests/setteeTests.swift" \
+  "docs/plans/2026-06-09-twitter-log-boundary.md" \
   "docs/plans/2026-06-08-twitter-search-result-limit.md" \
   "docs/plans/2026-06-08-fabric-twitter-beacons-maintenance-baseline.md"; do
   require_file "$path"
@@ -53,6 +56,19 @@ fi
 
 if grep -Fq "println(String(proximity))" "$ROOT_DIR/settee/WaitingController.swift"; then
   printf '%s\n' "Beacon proximity transitions must not be logged." >&2
+  exit 1
+fi
+
+if grep -R -F "println(error)" "$ROOT_DIR/settee"/*.swift >/dev/null ||
+  grep -R -E 'println\(.*(session\.userName|connectionError|clientError|localizedDescription|String\(id\)|\(error\))' "$ROOT_DIR/settee"/*.swift >/dev/null; then
+  printf '%s\n' "Twitter account, tweet ID, and raw error details must not be logged." >&2
+  exit 1
+fi
+
+if ! grep -Fq "Twitter tweet load failed" "$ROOT_DIR/settee/ViewController.swift" ||
+  ! grep -Fq "Twitter guest login failed" "$ROOT_DIR/settee/TVSearchAPI.swift" ||
+  ! grep -Fq "Avoid logging tweet IDs" "$ROOT_DIR/settee/RESTApi.swift"; then
+  printf '%s\n' "Twitter logging must use generic diagnostics without account-specific values." >&2
   exit 1
 fi
 
@@ -103,6 +119,11 @@ fi
 
 if ! grep -Fq "status: completed" "$TWEET_LIMIT_PLAN"; then
   printf '%s\n' "Tweet result limit plan must be marked completed." >&2
+  exit 1
+fi
+
+if ! grep -Fq "status: completed" "$TWITTER_LOG_PLAN"; then
+  printf '%s\n' "Twitter log boundary plan must be marked completed." >&2
   exit 1
 fi
 

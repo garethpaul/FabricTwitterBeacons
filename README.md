@@ -60,8 +60,9 @@ make check
 ```
 
 The baseline verifies that Fabric credentials are not committed, raw beacon
-payloads are not logged, local credential files stay ignored, and the Xcode
-project can be listed when `xcodebuild` is installed.
+payloads and account-specific Twitter details are not logged, local credential
+files stay ignored, and the Xcode project can be listed when `xcodebuild` is
+installed.
 
 For functional verification, use Xcode's test action or `xcodebuild test` with
 the appropriate scheme and destination.
@@ -73,6 +74,8 @@ When the required SDK or runtime is unavailable, use static checks and source re
 - Detected references to Twitter. Keep API keys, OAuth credentials, tokens, and account-specific values in local configuration only.
 - Keep `FABRIC_API_KEY`, `FABRIC_BUILD_SECRET`, Twitter credentials, signing identities, and local `.xcconfig` files out of source control.
 - Treat iBeacon UUIDs and proximity behavior as sensitive physical-device configuration. Do not log beacon payloads or user proximity transitions without a reviewed need.
+- Do not log Twitter usernames, tweet IDs, raw API errors, or account-specific
+  response details from beacon-triggered flows.
 
 ## Security and Privacy Notes
 

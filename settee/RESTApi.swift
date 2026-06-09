@@ -24,12 +24,12 @@ func Search(handle: String, completion: (result: String) -> Void) {
     Twitter.sharedInstance().logInWithCompletion{
         (session, error) -> Void in
         if (session != nil) {
-            println("signed in as \(session.userName)");
+            println("Twitter user session established");
             /// go
             let request = Twitter.sharedInstance().APIClient.URLRequestWithMethod("GET", URL:  statusesShowEndpoint, parameters: params, error:&clientError)
 
             if request != nil {
-                println("request is not nil")
+                println("Twitter request prepared")
                 Twitter.sharedInstance().APIClient.sendTwitterRequest(request) {
                     (response, data, connectionError) -> Void in
                     if (connectionError == nil) {
@@ -42,7 +42,7 @@ func Search(handle: String, completion: (result: String) -> Void) {
                         if let statuses = json!["statuses"] as? JSONArray {
                             for tweet in statuses {
                                 if let id = tweet["id"] as?Int{
-                                    println(String(id))
+                                    // Avoid logging tweet IDs from account-specific responses.
                                 }
                             }
                         }
@@ -50,20 +50,19 @@ func Search(handle: String, completion: (result: String) -> Void) {
                     }
 
                     else {
-                        println("Error: \(connectionError)")
+                        println("Twitter API request failed")
                     }
                 }
             }
             else {
-                println("Error: \(clientError)")
+                println("Twitter request could not be created")
             }
 
         } else {
-            println("error: \(error.localizedDescription)");
+            println("Twitter login failed");
         }
         
     }
 }
-
 
 
