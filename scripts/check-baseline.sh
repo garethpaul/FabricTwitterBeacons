@@ -11,6 +11,7 @@ TWEET_LOAD_PLAN="$ROOT_DIR/docs/plans/2026-06-09-twitter-load-inflight-guard.md"
 TWITTER_JSON_PLAN="$ROOT_DIR/docs/plans/2026-06-09-twitter-search-json-guard.md"
 TWITTER_REST_JSON_PLAN="$ROOT_DIR/docs/plans/2026-06-09-twitter-rest-json-guard.md"
 TWITTER_SEARCH_FAILURE_PLAN="$ROOT_DIR/docs/plans/2026-06-09-twitter-search-failure-completion.md"
+TWITTER_TWEET_TYPE_PLAN="$ROOT_DIR/docs/plans/2026-06-09-twitter-loaded-tweet-type-guard.md"
 
 require_file() {
   path=$1
@@ -40,6 +41,7 @@ for path in \
   "docs/plans/2026-06-09-twitter-search-json-guard.md" \
   "docs/plans/2026-06-09-twitter-rest-json-guard.md" \
   "docs/plans/2026-06-09-twitter-search-failure-completion.md" \
+  "docs/plans/2026-06-09-twitter-loaded-tweet-type-guard.md" \
   "docs/plans/2026-06-09-twitter-log-boundary.md" \
   "docs/plans/2026-06-08-twitter-search-result-limit.md" \
   "docs/plans/2026-06-08-fabric-twitter-beacons-maintenance-baseline.md"; do
@@ -95,9 +97,11 @@ fi
 if ! grep -Fiq "malformed Twitter search JSON" "$ROOT_DIR/README.md" ||
   ! grep -Fiq "Twitter search transport failures" "$ROOT_DIR/README.md" ||
   ! grep -Fiq "malformed Twitter REST JSON" "$ROOT_DIR/README.md" ||
+  ! grep -Fiq "Loaded TwitterKit tweet objects" "$ROOT_DIR/README.md" ||
   ! grep -Fiq "malformed Twitter search JSON" "$ROOT_DIR/VISION.md" ||
   ! grep -Fiq "Twitter search transport failures" "$ROOT_DIR/VISION.md" ||
-  ! grep -Fiq "malformed Twitter REST JSON" "$ROOT_DIR/VISION.md"; then
+  ! grep -Fiq "malformed Twitter REST JSON" "$ROOT_DIR/VISION.md" ||
+  ! grep -Fiq "Loaded TwitterKit tweet responses" "$ROOT_DIR/VISION.md"; then
   printf '%s\n' "README and VISION must document malformed Twitter search JSON handling." >&2
   exit 1
 fi
@@ -146,6 +150,15 @@ if ! grep -Fq "if tweetIDs.isEmpty" "$ROOT_DIR/settee/ViewController.swift" ||
   ! grep -Fq "self.isLoadingTweets = true" "$ROOT_DIR/settee/ViewController.swift" ||
   [ "$loading_reset_count" -lt 2 ]; then
   printf '%s\n' "Tweet loading must skip empty IDs, mark in-flight requests, and clear the loading flag on failure/completion." >&2
+  exit 1
+fi
+
+if ! grep -Fq "if let loadedTweetObjects = twttrs" "$ROOT_DIR/settee/ViewController.swift" ||
+  ! grep -Fq "if let tweet = i as? TWTRTweet" "$ROOT_DIR/settee/ViewController.swift" ||
+  ! grep -Fq "self.tweets = loadedTweets" "$ROOT_DIR/settee/ViewController.swift" ||
+  grep -Fq "self.tweets.append(i as TWTRTweet)" "$ROOT_DIR/settee/ViewController.swift" ||
+  ! grep -Fq "Loaded TwitterKit tweet responses" "$ROOT_DIR/SECURITY.md"; then
+  printf '%s\n' "Loaded TwitterKit tweets must be type-checked before replacing table contents." >&2
   exit 1
 fi
 
@@ -217,6 +230,11 @@ if ! grep -Fq "status: completed" "$TWITTER_SEARCH_FAILURE_PLAN"; then
   exit 1
 fi
 
+if ! grep -Fq "status: completed" "$TWITTER_TWEET_TYPE_PLAN"; then
+  printf '%s\n' "Twitter loaded tweet type guard plan must be marked completed." >&2
+  exit 1
+fi
+
 if ! grep -Fq "make check" "$TWITTER_REST_JSON_PLAN"; then
   printf '%s\n' "Twitter REST JSON guard plan must record make check verification." >&2
   exit 1
@@ -224,6 +242,11 @@ fi
 
 if ! grep -Fq "make check" "$TWITTER_SEARCH_FAILURE_PLAN"; then
   printf '%s\n' "Twitter search failure completion plan must record make check verification." >&2
+  exit 1
+fi
+
+if ! grep -Fq "make check" "$TWITTER_TWEET_TYPE_PLAN"; then
+  printf '%s\n' "Twitter loaded tweet type guard plan must record make check verification." >&2
   exit 1
 fi
 

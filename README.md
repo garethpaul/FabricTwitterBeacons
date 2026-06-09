@@ -66,6 +66,9 @@ ranging, malformed Twitter search JSON completes with an empty result,
 malformed Twitter REST JSON fails closed without force-unwrapping,
 beacon-triggered tweet loads are bounded and non-overlapping, and the Xcode
 project can be listed when `xcodebuild` is installed.
+Loaded TwitterKit tweet objects are type-checked before replacing the visible
+table contents, so unexpected response objects do not crash the table or append
+duplicate stale rows.
 
 For functional verification, use Xcode's test action or `xcodebuild test` with
 the appropriate scheme and destination.
@@ -83,6 +86,8 @@ When the required SDK or runtime is unavailable, use static checks and source re
   response details from beacon-triggered flows.
 - Beacon-triggered tweet loading skips empty search results and suppresses
   overlapping guest tweet-load requests.
+- Loaded TwitterKit tweet responses are type-checked before replacing the
+  visible table contents.
 - Malformed Twitter search JSON completes with an empty result instead of
   force-unwrapping the response body.
 - Twitter search transport failures complete with empty results so
@@ -109,6 +114,8 @@ When the required SDK or runtime is unavailable, use static checks and source re
   helper JSON parsing guard.
 - See `docs/plans/2026-06-09-twitter-search-failure-completion.md` for Twitter
   search failure completion behavior.
+- See `docs/plans/2026-06-09-twitter-loaded-tweet-type-guard.md` for loaded
+  tweet table replacement behavior.
 
 ## Contributing
 

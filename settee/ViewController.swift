@@ -120,13 +120,18 @@ class ViewController: UITableViewController, CLLocationManagerDelegate, TWTRTwee
                 self.isLoadingTweets = false
 
                 // If there are tweets do something magical
-                if ((twttrs) != nil) {
+                if let loadedTweetObjects = twttrs {
 
-                    // Loop through tweets and do something
-                    for i in twttrs {
+                    var loadedTweets: [TWTRTweet] = []
+                    // Only display typed TwitterKit tweet objects from the response.
+                    for i in loadedTweetObjects {
                         // Append the Tweet to the Tweets to display in the table view.
-                        self.tweets.append(i as TWTRTweet)
+                        if let tweet = i as? TWTRTweet {
+                            loadedTweets.append(tweet)
+                        }
                     }
+
+                    self.tweets = loadedTweets
                 } else {
                     println("Twitter tweet load failed")
                 }

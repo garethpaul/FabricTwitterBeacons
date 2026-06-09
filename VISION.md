@@ -39,6 +39,8 @@ Current baseline:
   helper response body.
 - Beacon-triggered tweet loading skips empty search results and prevents
   overlapping guest tweet-load requests.
+- Loaded TwitterKit tweet responses are type-checked before replacing the
+  visible table contents, avoiding force-cast crashes and duplicate stale rows.
 - Local `.env` and `.xcconfig` files stay ignored because they may contain
   Fabric, Twitter, signing, or beacon configuration.
 - Xcode project listing is attempted when `xcodebuild` is installed; otherwise
