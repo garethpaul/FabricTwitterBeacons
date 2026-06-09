@@ -2,6 +2,7 @@
 
 ## 2026-06-09
 
+- Completed Twitter search transport/setup failures with empty results.
 - Restored the app `Info.plist` with location usage descriptions for beacon
   ranging and added static baseline coverage for it.
 - Replaced raw Twitter error, username, and tweet-ID logs with generic

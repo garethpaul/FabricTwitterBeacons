@@ -94,15 +94,18 @@ func Search(completion: (result: [String]) -> Void) {
 
                     else {
                         println("Twitter search request failed")
+                        completion(result: [])
                     }
                 }
             }
             else {
                 println("Twitter search request could not be created")
+                completion(result: [])
             }
 
         } else {
             println("Twitter guest login failed");
+            completion(result: [])
         }
         
     }

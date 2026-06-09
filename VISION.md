@@ -33,6 +33,8 @@ Current baseline:
 - Twitter diagnostics avoid usernames, tweet IDs, and raw client error details.
 - Malformed Twitter search JSON completes with an empty result instead of
   force-unwrapping the response body.
+- Twitter search transport failures complete with empty results so
+  beacon-triggered callers can skip tweet loading consistently.
 - Malformed Twitter REST JSON fails closed without force-unwrapping the legacy
   helper response body.
 - Beacon-triggered tweet loading skips empty search results and prevents

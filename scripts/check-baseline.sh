@@ -10,6 +10,7 @@ LOCATION_PRIVACY_PLAN="$ROOT_DIR/docs/plans/2026-06-09-location-usage-plist.md"
 TWEET_LOAD_PLAN="$ROOT_DIR/docs/plans/2026-06-09-twitter-load-inflight-guard.md"
 TWITTER_JSON_PLAN="$ROOT_DIR/docs/plans/2026-06-09-twitter-search-json-guard.md"
 TWITTER_REST_JSON_PLAN="$ROOT_DIR/docs/plans/2026-06-09-twitter-rest-json-guard.md"
+TWITTER_SEARCH_FAILURE_PLAN="$ROOT_DIR/docs/plans/2026-06-09-twitter-search-failure-completion.md"
 
 require_file() {
   path=$1
@@ -38,6 +39,7 @@ for path in \
   "docs/plans/2026-06-09-twitter-load-inflight-guard.md" \
   "docs/plans/2026-06-09-twitter-search-json-guard.md" \
   "docs/plans/2026-06-09-twitter-rest-json-guard.md" \
+  "docs/plans/2026-06-09-twitter-search-failure-completion.md" \
   "docs/plans/2026-06-09-twitter-log-boundary.md" \
   "docs/plans/2026-06-08-twitter-search-result-limit.md" \
   "docs/plans/2026-06-08-fabric-twitter-beacons-maintenance-baseline.md"; do
@@ -91,8 +93,10 @@ if ! grep -Fq "Twitter tweet load failed" "$ROOT_DIR/settee/ViewController.swift
 fi
 
 if ! grep -Fiq "malformed Twitter search JSON" "$ROOT_DIR/README.md" ||
+  ! grep -Fiq "Twitter search transport failures" "$ROOT_DIR/README.md" ||
   ! grep -Fiq "malformed Twitter REST JSON" "$ROOT_DIR/README.md" ||
   ! grep -Fiq "malformed Twitter search JSON" "$ROOT_DIR/VISION.md" ||
+  ! grep -Fiq "Twitter search transport failures" "$ROOT_DIR/VISION.md" ||
   ! grep -Fiq "malformed Twitter REST JSON" "$ROOT_DIR/VISION.md"; then
   printf '%s\n' "README and VISION must document malformed Twitter search JSON handling." >&2
   exit 1
@@ -119,6 +123,14 @@ if grep -Fq 'json!["statuses"]' "$ROOT_DIR/settee/TVSearchAPI.swift" ||
   ! grep -Fq "Twitter API response could not be parsed" "$ROOT_DIR/settee/RESTApi.swift" ||
   ! grep -Fq "completion(result: [])" "$ROOT_DIR/settee/TVSearchAPI.swift"; then
   printf '%s\n' "Twitter search JSON parsing must avoid force-unwrapping malformed responses and fail closed." >&2
+  exit 1
+fi
+
+search_empty_completions=$(grep -F "completion(result: [])" "$ROOT_DIR/settee/TVSearchAPI.swift" | wc -l | tr -d ' ')
+if [ "$search_empty_completions" -lt 6 ] ||
+  ! grep -Fq "Twitter search request failed" "$ROOT_DIR/settee/TVSearchAPI.swift" ||
+  ! grep -Fq "Twitter search request could not be created" "$ROOT_DIR/settee/TVSearchAPI.swift"; then
+  printf '%s\n' "Twitter search transport/setup failures must complete with empty results." >&2
   exit 1
 fi
 
@@ -200,8 +212,18 @@ if ! grep -Fq "status: completed" "$TWITTER_REST_JSON_PLAN"; then
   exit 1
 fi
 
+if ! grep -Fq "status: completed" "$TWITTER_SEARCH_FAILURE_PLAN"; then
+  printf '%s\n' "Twitter search failure completion plan must be marked completed." >&2
+  exit 1
+fi
+
 if ! grep -Fq "make check" "$TWITTER_REST_JSON_PLAN"; then
   printf '%s\n' "Twitter REST JSON guard plan must record make check verification." >&2
+  exit 1
+fi
+
+if ! grep -Fq "make check" "$TWITTER_SEARCH_FAILURE_PLAN"; then
+  printf '%s\n' "Twitter search failure completion plan must record make check verification." >&2
   exit 1
 fi
 

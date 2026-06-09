@@ -85,6 +85,8 @@ When the required SDK or runtime is unavailable, use static checks and source re
   overlapping guest tweet-load requests.
 - Malformed Twitter search JSON completes with an empty result instead of
   force-unwrapping the response body.
+- Twitter search transport failures complete with empty results so
+  beacon-triggered callers can skip tweet loading consistently.
 - Malformed Twitter REST JSON in the legacy REST helper fails closed instead of
   force-unwrapping the response body.
 
@@ -105,6 +107,8 @@ When the required SDK or runtime is unavailable, use static checks and source re
 - See `VISION.md` for project direction and contribution guardrails.
 - See `docs/plans/2026-06-09-twitter-rest-json-guard.md` for the legacy REST
   helper JSON parsing guard.
+- See `docs/plans/2026-06-09-twitter-search-failure-completion.md` for Twitter
+  search failure completion behavior.
 
 ## Contributing
 
