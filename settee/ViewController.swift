@@ -133,6 +133,10 @@ class ViewController: UITableViewController, CLLocationManagerDelegate, TWTRTwee
 
     // This is where all the magic happens for determing whether to render the Tweets
     func locationManager(manager: CLLocationManager!, didRangeBeacons beacons: [AnyObject]!, inRegion region: CLBeaconRegion!) {
+        if beacons == nil {
+            return
+        }
+
         let knownBeacons = beacons.filter{ $0.proximity != CLProximity.Unknown }
         if (knownBeacons.count > 0) {
             let closestBeacon = knownBeacons[0] as CLBeacon
@@ -294,4 +298,3 @@ class ViewController: UITableViewController, CLLocationManagerDelegate, TWTRTwee
 
 
 }
-

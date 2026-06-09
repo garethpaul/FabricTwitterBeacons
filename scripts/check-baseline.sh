@@ -49,6 +49,17 @@ if grep -Fq "println(beacons)" "$ROOT_DIR/settee/AppDelegate.swift"; then
   exit 1
 fi
 
+if grep -Fq "println(String(proximity))" "$ROOT_DIR/settee/WaitingController.swift"; then
+  printf '%s\n' "Beacon proximity transitions must not be logged." >&2
+  exit 1
+fi
+
+beacon_nil_guards=$(grep -R "if beacons == nil" "$ROOT_DIR/settee" | wc -l | tr -d ' ')
+if [ "$beacon_nil_guards" -lt 2 ]; then
+  printf '%s\n' "Beacon ranging callbacks must guard missing beacon arrays." >&2
+  exit 1
+fi
+
 if grep -Fq "topN =" "$ROOT_DIR/settee/RateLimit.swift" ||
   ! grep -Fq "limitTweetIDs" "$ROOT_DIR/settee/RateLimit.swift"; then
   printf '%s\n' "RateLimit.swift must keep a complete bounded-list helper." >&2

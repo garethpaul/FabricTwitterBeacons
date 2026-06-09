@@ -51,6 +51,10 @@ class WaitingController: UIViewController, CLLocationManagerDelegate {
 
     //
     func locationManager(manager: CLLocationManager!, didRangeBeacons beacons: [AnyObject]!, inRegion region: CLBeaconRegion!) {
+        if beacons == nil {
+            return
+        }
+
         let knownBeacons = beacons.filter{ $0.proximity != CLProximity.Unknown }
         if (knownBeacons.count > 0) {
             let closestBeacon = knownBeacons[0] as CLBeacon
@@ -66,8 +70,6 @@ class WaitingController: UIViewController, CLLocationManagerDelegate {
                 if (proximity == 1){
                     self.performSegueWithIdentifier("ViewController", sender: self)
                 }
-                
-                println(String(proximity))
             }
             
         }
