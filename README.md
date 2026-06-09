@@ -62,7 +62,8 @@ make check
 The baseline verifies that Fabric credentials are not committed, raw beacon
 payloads and account-specific Twitter details are not logged, local credential
 files stay ignored, the app `Info.plist` carries location usage copy for beacon
-ranging, and the Xcode project can be listed when `xcodebuild` is installed.
+ranging, beacon-triggered tweet loads are bounded and non-overlapping, and the
+Xcode project can be listed when `xcodebuild` is installed.
 
 For functional verification, use Xcode's test action or `xcodebuild test` with
 the appropriate scheme and destination.
@@ -78,6 +79,8 @@ When the required SDK or runtime is unavailable, use static checks and source re
 - Treat iBeacon UUIDs and proximity behavior as sensitive physical-device configuration. Do not log beacon payloads or user proximity transitions without a reviewed need.
 - Do not log Twitter usernames, tweet IDs, raw API errors, or account-specific
   response details from beacon-triggered flows.
+- Beacon-triggered tweet loading skips empty search results and suppresses
+  overlapping guest tweet-load requests.
 
 ## Security and Privacy Notes
 

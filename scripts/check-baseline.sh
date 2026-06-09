@@ -7,6 +7,7 @@ PLAN="$ROOT_DIR/docs/plans/2026-06-08-fabric-twitter-beacons-maintenance-baselin
 TWEET_LIMIT_PLAN="$ROOT_DIR/docs/plans/2026-06-08-twitter-search-result-limit.md"
 TWITTER_LOG_PLAN="$ROOT_DIR/docs/plans/2026-06-09-twitter-log-boundary.md"
 LOCATION_PRIVACY_PLAN="$ROOT_DIR/docs/plans/2026-06-09-location-usage-plist.md"
+TWEET_LOAD_PLAN="$ROOT_DIR/docs/plans/2026-06-09-twitter-load-inflight-guard.md"
 
 require_file() {
   path=$1
@@ -32,6 +33,7 @@ for path in \
   "settee/RESTApi.swift" \
   "setteeTests/setteeTests.swift" \
   "docs/plans/2026-06-09-location-usage-plist.md" \
+  "docs/plans/2026-06-09-twitter-load-inflight-guard.md" \
   "docs/plans/2026-06-09-twitter-log-boundary.md" \
   "docs/plans/2026-06-08-twitter-search-result-limit.md" \
   "docs/plans/2026-06-08-fabric-twitter-beacons-maintenance-baseline.md"; do
@@ -97,6 +99,14 @@ if grep -Fq "topN =" "$ROOT_DIR/settee/RateLimit.swift" ||
   exit 1
 fi
 
+loading_reset_count=$(grep -F "self.isLoadingTweets = false" "$ROOT_DIR/settee/ViewController.swift" | wc -l | tr -d ' ')
+if ! grep -Fq "if tweetIDs.isEmpty" "$ROOT_DIR/settee/ViewController.swift" ||
+  ! grep -Fq "self.isLoadingTweets = true" "$ROOT_DIR/settee/ViewController.swift" ||
+  [ "$loading_reset_count" -lt 2 ]; then
+  printf '%s\n' "Tweet loading must skip empty IDs, mark in-flight requests, and clear the loading flag on failure/completion." >&2
+  exit 1
+fi
+
 if ! grep -Fq "make check" "$ROOT_DIR/README.md" ||
   ! grep -Fq "FABRIC_API_KEY" "$ROOT_DIR/README.md" ||
   ! grep -Fq "FABRIC_BUILD_SECRET" "$ROOT_DIR/README.md" ||
@@ -142,6 +152,11 @@ fi
 
 if ! grep -Fq "status: completed" "$LOCATION_PRIVACY_PLAN"; then
   printf '%s\n' "Location usage plist plan must be marked completed." >&2
+  exit 1
+fi
+
+if ! grep -Fq "status: completed" "$TWEET_LOAD_PLAN"; then
+  printf '%s\n' "Tweet load in-flight guard plan must be marked completed." >&2
   exit 1
 fi
 

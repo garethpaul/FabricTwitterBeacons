@@ -31,6 +31,8 @@ Current baseline:
 - The app `Info.plist` is tracked with reviewed location usage descriptions for
   beacon ranging.
 - Twitter diagnostics avoid usernames, tweet IDs, and raw client error details.
+- Beacon-triggered tweet loading skips empty search results and prevents
+  overlapping guest tweet-load requests.
 - Local `.env` and `.xcconfig` files stay ignored because they may contain
   Fabric, Twitter, signing, or beacon configuration.
 - Xcode project listing is attempted when `xcodebuild` is installed; otherwise
