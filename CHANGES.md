@@ -2,6 +2,8 @@
 
 ## 2026-06-09
 
+- Restored the app `Info.plist` with location usage descriptions for beacon
+  ranging and added static baseline coverage for it.
 - Replaced raw Twitter error, username, and tweet-ID logs with generic
   diagnostics.
 - Added a static baseline guard and plan for the Twitter logging boundary.

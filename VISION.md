@@ -28,6 +28,8 @@ Current baseline:
   `FABRIC_API_KEY` and `FABRIC_BUILD_SECRET` from the local environment instead
   of committed identifiers.
 - Raw beacon payloads are not logged from the app delegate.
+- The app `Info.plist` is tracked with reviewed location usage descriptions for
+  beacon ranging.
 - Twitter diagnostics avoid usernames, tweet IDs, and raw client error details.
 - Local `.env` and `.xcconfig` files stay ignored because they may contain
   Fabric, Twitter, signing, or beacon configuration.

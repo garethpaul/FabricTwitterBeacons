@@ -19,7 +19,7 @@ DerivedData
 *.xcuserstate
 
 Info.plist
-settee/Info.plist
+!settee/Info.plist
 
 # Local credentials and per-machine Xcode configuration
 .env
