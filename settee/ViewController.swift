@@ -32,6 +32,7 @@ class ViewController: UITableViewController, CLLocationManagerDelegate, TWTRTwee
     let tweetTableCellReuseIdentifier = "TweetCell"
 
     var isLoadingTweets = false
+    var isBeaconScreenVisible = false
     var prev: Int?
 
     // Setup iBeacon
@@ -86,12 +87,30 @@ class ViewController: UITableViewController, CLLocationManagerDelegate, TWTRTwee
         locationManager.delegate = self
 
         if (CLLocationManager.authorizationStatus() != CLAuthorizationStatus.Authorized) {
-            locationManager.requestAlwaysAuthorization()
+            locationManager.requestWhenInUseAuthorization()
         }
+    }
 
-        locationManager.startRangingBeaconsInRegion(region)
+    override func viewWillDisappear(animated: Bool) {
+        super.viewWillDisappear(animated)
+        isBeaconScreenVisible = false
+        locationManager.stopRangingBeaconsInRegion(region)
+    }
 
+    override func viewWillAppear(animated: Bool) {
+        super.viewWillAppear(animated)
+        isBeaconScreenVisible = true
+        if CLLocationManager.authorizationStatus() == CLAuthorizationStatus.Authorized {
+            locationManager.startRangingBeaconsInRegion(region)
+        }
+    }
 
+    func locationManager(manager: CLLocationManager!, didChangeAuthorizationStatus status: CLAuthorizationStatus) {
+        if status == CLAuthorizationStatus.Authorized && isBeaconScreenVisible {
+            manager.startRangingBeaconsInRegion(region)
+        } else {
+            manager.stopRangingBeaconsInRegion(region)
+        }
     }
 
     func loadTweets(tweetIDs: [String]) {

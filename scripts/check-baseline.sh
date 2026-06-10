@@ -12,6 +12,7 @@ TWITTER_JSON_PLAN="$ROOT_DIR/docs/plans/2026-06-09-twitter-search-json-guard.md"
 TWITTER_REST_JSON_PLAN="$ROOT_DIR/docs/plans/2026-06-09-twitter-rest-json-guard.md"
 TWITTER_SEARCH_FAILURE_PLAN="$ROOT_DIR/docs/plans/2026-06-09-twitter-search-failure-completion.md"
 TWITTER_TWEET_TYPE_PLAN="$ROOT_DIR/docs/plans/2026-06-09-twitter-loaded-tweet-type-guard.md"
+BEACON_AUTHORIZATION_PLAN="$ROOT_DIR/docs/plans/2026-06-10-beacon-authorization-boundary.md"
 CI_PLAN="$ROOT_DIR/docs/plans/2026-06-10-ci-baseline.md"
 CI_WORKFLOW="$ROOT_DIR/.github/workflows/check.yml"
 
@@ -45,6 +46,7 @@ for path in \
   "docs/plans/2026-06-09-twitter-rest-json-guard.md" \
   "docs/plans/2026-06-09-twitter-search-failure-completion.md" \
   "docs/plans/2026-06-09-twitter-loaded-tweet-type-guard.md" \
+  "docs/plans/2026-06-10-beacon-authorization-boundary.md" \
   "docs/plans/2026-06-10-ci-baseline.md" \
   "docs/plans/2026-06-09-twitter-log-boundary.md" \
   "docs/plans/2026-06-08-twitter-search-result-limit.md" \
@@ -53,11 +55,22 @@ for path in \
 done
 
 if ! grep -Fq "INFOPLIST_FILE = settee/Info.plist;" "$PROJECT" ||
-  ! grep -Fq "NSLocationAlwaysUsageDescription" "$ROOT_DIR/settee/Info.plist" ||
   ! grep -Fq "NSLocationWhenInUseUsageDescription" "$ROOT_DIR/settee/Info.plist" ||
-  ! grep -Fq "NSLocationAlwaysAndWhenInUseUsageDescription" "$ROOT_DIR/settee/Info.plist" ||
+  grep -Fq "NSLocationAlwaysUsageDescription" "$ROOT_DIR/settee/Info.plist" ||
+  grep -Fq "NSLocationAlwaysAndWhenInUseUsageDescription" "$ROOT_DIR/settee/Info.plist" ||
   ! grep -Fq "beacon proximity" "$ROOT_DIR/settee/Info.plist"; then
-  printf '%s\n' "App Info.plist must document location usage for beacon ranging." >&2
+  printf '%s\n' "App Info.plist must document only when-in-use location access for beacon ranging." >&2
+  exit 1
+fi
+
+if ! grep -Fq "locationManager.requestWhenInUseAuthorization()" "$ROOT_DIR/settee/ViewController.swift" ||
+  grep -Fq "requestAlwaysAuthorization" "$ROOT_DIR/settee/ViewController.swift" ||
+  ! grep -Fq "didChangeAuthorizationStatus" "$ROOT_DIR/settee/ViewController.swift" ||
+  ! grep -Fq "manager.startRangingBeaconsInRegion(region)" "$ROOT_DIR/settee/ViewController.swift" ||
+  ! grep -Fq "locationManager.stopRangingBeaconsInRegion(region)" "$ROOT_DIR/settee/ViewController.swift" ||
+  ! grep -Fq "override func viewWillAppear" "$ROOT_DIR/settee/ViewController.swift" ||
+  ! grep -Fq "status == CLAuthorizationStatus.Authorized && isBeaconScreenVisible" "$ROOT_DIR/settee/ViewController.swift"; then
+  printf '%s\n' "Beacon ranging must require foreground authorization and follow view visibility." >&2
   exit 1
 fi
 
@@ -258,6 +271,11 @@ fi
 
 if ! grep -Fq "status: completed" "$TWITTER_TWEET_TYPE_PLAN"; then
   printf '%s\n' "Twitter loaded tweet type guard plan must be marked completed." >&2
+  exit 1
+fi
+
+if ! grep -Fq "status: completed" "$BEACON_AUTHORIZATION_PLAN"; then
+  printf '%s\n' "Beacon authorization plan must be marked completed." >&2
   exit 1
 fi
 

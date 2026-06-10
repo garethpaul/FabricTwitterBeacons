@@ -29,8 +29,8 @@ Current baseline:
   `FABRIC_API_KEY` and `FABRIC_BUILD_SECRET` from the local environment instead
   of committed identifiers.
 - Raw beacon payloads are not logged from the app delegate.
-- The app `Info.plist` is tracked with reviewed location usage descriptions for
-  beacon ranging.
+- The app `Info.plist` requests only when-in-use location access for beacon
+  ranging; ranging starts after authorization and follows screen visibility.
 - Twitter diagnostics avoid usernames, tweet IDs, and raw client error details.
 - Malformed Twitter search JSON completes with an empty result instead of
   force-unwrapping the response body.

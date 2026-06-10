@@ -2,6 +2,8 @@
 
 ## 2026-06-10
 
+- Reduced beacon permission to when-in-use access, deferred ranging until
+  authorization, and stopped ranging when the beacon screen disappears.
 - Added a pinned, read-only `macos-15` GitHub Actions workflow that runs
   `make check` and the hosted Xcode project parse.
 - Added stale-run cancellation and a ten-minute job timeout without introducing

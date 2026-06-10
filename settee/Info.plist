@@ -22,10 +22,6 @@
 	<string>1</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
-	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
-	<string>Settee uses beacon proximity to show nearby TV conversation when you are near a configured seat beacon.</string>
-	<key>NSLocationAlwaysUsageDescription</key>
-	<string>Settee uses beacon proximity to show nearby TV conversation when you are near a configured seat beacon.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>Settee uses beacon proximity to show nearby TV conversation when you are near a configured seat beacon.</string>
 	<key>UIMainStoryboardFile</key>
