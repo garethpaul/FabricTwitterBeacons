@@ -21,6 +21,7 @@ Priority:
 - Preserve the Twitter/Fabric integration flow
 - Avoid committing Fabric, Twitter, or signing credentials
 - Keep physical-device requirements documented
+- Keep GitHub Actions aligned with the local `make check` baseline
 
 Current baseline:
 
@@ -45,6 +46,8 @@ Current baseline:
   Fabric, Twitter, signing, or beacon configuration.
 - Xcode project listing is attempted when `xcodebuild` is installed; otherwise
   static checks remain the minimum verification path.
+- GitHub Actions runs the local baseline and Xcode project parse on a fixed
+  macOS runner for pushes, pull requests, and manual dispatches.
 
 Next priorities:
 
@@ -59,6 +62,8 @@ Contribution rules:
 - Verify beacon behavior on physical hardware when changing proximity logic.
 - Keep credentials out of `Info.plist` and source control.
 - Do not add automatic posting behavior without explicit user confirmation.
+- Keep `.github/workflows/check.yml` in sync with the local maintenance and
+  Xcode project-parse baseline.
 
 ## Security And Privacy
 

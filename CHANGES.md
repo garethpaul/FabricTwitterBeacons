@@ -1,5 +1,14 @@
 # Changes
 
+## 2026-06-10
+
+- Added a pinned, read-only `macos-15` GitHub Actions workflow that runs
+  `make check` and the hosted Xcode project parse.
+- Added stale-run cancellation and a ten-minute job timeout without introducing
+  Fabric, Twitter, signing, or beacon credentials.
+- Extended the baseline checker and docs to require the hosted CI verification
+  path.
+
 ## 2026-06-09
 
 - Type-checked loaded TwitterKit tweet objects before replacing visible table

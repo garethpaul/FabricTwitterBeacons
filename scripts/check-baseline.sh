@@ -12,6 +12,8 @@ TWITTER_JSON_PLAN="$ROOT_DIR/docs/plans/2026-06-09-twitter-search-json-guard.md"
 TWITTER_REST_JSON_PLAN="$ROOT_DIR/docs/plans/2026-06-09-twitter-rest-json-guard.md"
 TWITTER_SEARCH_FAILURE_PLAN="$ROOT_DIR/docs/plans/2026-06-09-twitter-search-failure-completion.md"
 TWITTER_TWEET_TYPE_PLAN="$ROOT_DIR/docs/plans/2026-06-09-twitter-loaded-tweet-type-guard.md"
+CI_PLAN="$ROOT_DIR/docs/plans/2026-06-10-ci-baseline.md"
+CI_WORKFLOW="$ROOT_DIR/.github/workflows/check.yml"
 
 require_file() {
   path=$1
@@ -23,6 +25,7 @@ require_file() {
 
 for path in \
   ".gitignore" \
+  ".github/workflows/check.yml" \
   "CHANGES.md" \
   "Makefile" \
   "README.md" \
@@ -42,6 +45,7 @@ for path in \
   "docs/plans/2026-06-09-twitter-rest-json-guard.md" \
   "docs/plans/2026-06-09-twitter-search-failure-completion.md" \
   "docs/plans/2026-06-09-twitter-loaded-tweet-type-guard.md" \
+  "docs/plans/2026-06-10-ci-baseline.md" \
   "docs/plans/2026-06-09-twitter-log-boundary.md" \
   "docs/plans/2026-06-08-twitter-search-result-limit.md" \
   "docs/plans/2026-06-08-fabric-twitter-beacons-maintenance-baseline.md"; do
@@ -163,6 +167,7 @@ if ! grep -Fq "if let loadedTweetObjects = twttrs" "$ROOT_DIR/settee/ViewControl
 fi
 
 if ! grep -Fq "make check" "$ROOT_DIR/README.md" ||
+  ! grep -Fq "GitHub Actions" "$ROOT_DIR/README.md" ||
   ! grep -Fq "FABRIC_API_KEY" "$ROOT_DIR/README.md" ||
   ! grep -Fq "FABRIC_BUILD_SECRET" "$ROOT_DIR/README.md" ||
   ! grep -Fq "physical-device" "$ROOT_DIR/README.md"; then
@@ -171,6 +176,7 @@ if ! grep -Fq "make check" "$ROOT_DIR/README.md" ||
 fi
 
 if ! grep -Fq "scripts/check-baseline.sh" "$ROOT_DIR/VISION.md" ||
+  ! grep -Fq "GitHub Actions" "$ROOT_DIR/VISION.md" ||
   ! grep -Fq "Fabric run script" "$ROOT_DIR/VISION.md" ||
   ! grep -iq "raw beacon payloads" "$ROOT_DIR/VISION.md"; then
   printf '%s\n' "VISION must describe the current Fabric and beacon privacy guardrails." >&2
@@ -181,6 +187,26 @@ if ! grep -Fq "*.xcconfig" "$ROOT_DIR/.gitignore" ||
   ! grep -Fq ".env" "$ROOT_DIR/.gitignore" ||
   ! grep -Fq "!settee/Info.plist" "$ROOT_DIR/.gitignore"; then
   printf '%s\n' "Local credential files must stay ignored while the app Info.plist stays tracked." >&2
+  exit 1
+fi
+
+if ! grep -Fq "runs-on: macos-15" "$CI_WORKFLOW" ||
+  ! grep -Fq "actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10" "$CI_WORKFLOW" ||
+  ! grep -Fq "run: make check" "$CI_WORKFLOW" ||
+  ! grep -Fq "permissions:" "$CI_WORKFLOW" ||
+  ! grep -Fq "contents: read" "$CI_WORKFLOW" ||
+  ! grep -Fq "workflow_dispatch:" "$CI_WORKFLOW" ||
+  ! grep -Fq "cancel-in-progress: true" "$CI_WORKFLOW" ||
+  ! grep -Fq "timeout-minutes: 10" "$CI_WORKFLOW"; then
+  printf '%s\n' "GitHub Actions workflow must run the pinned, read-only macOS baseline." >&2
+  exit 1
+fi
+
+if ! grep -Fq "GitHub Actions" "$ROOT_DIR/SECURITY.md" ||
+  ! grep -Fq "make check" "$ROOT_DIR/SECURITY.md" ||
+  ! grep -Fq "GitHub Actions" "$ROOT_DIR/CHANGES.md" ||
+  ! grep -Fq "docs/plans/2026-06-10-ci-baseline.md" "$ROOT_DIR/README.md"; then
+  printf '%s\n' "Project docs must record the GitHub Actions CI baseline." >&2
   exit 1
 fi
 
@@ -235,6 +261,11 @@ if ! grep -Fq "status: completed" "$TWITTER_TWEET_TYPE_PLAN"; then
   exit 1
 fi
 
+if ! grep -Fq "status: completed" "$CI_PLAN"; then
+  printf '%s\n' "CI baseline plan must be marked completed." >&2
+  exit 1
+fi
+
 if ! grep -Fq "make check" "$TWITTER_REST_JSON_PLAN"; then
   printf '%s\n' "Twitter REST JSON guard plan must record make check verification." >&2
   exit 1
@@ -247,6 +278,16 @@ fi
 
 if ! grep -Fq "make check" "$TWITTER_TWEET_TYPE_PLAN"; then
   printf '%s\n' "Twitter loaded tweet type guard plan must record make check verification." >&2
+  exit 1
+fi
+
+if ! grep -Fq "make check" "$CI_PLAN"; then
+  printf '%s\n' "CI baseline plan must record make check verification." >&2
+  exit 1
+fi
+
+if ! grep -Fq "xcodebuild -list" "$CI_PLAN"; then
+  printf '%s\n' "CI baseline plan must record hosted Xcode project parsing." >&2
   exit 1
 fi
 

@@ -69,6 +69,10 @@ project can be listed when `xcodebuild` is installed.
 Loaded TwitterKit tweet objects are type-checked before replacing the visible
 table contents, so unexpected response objects do not crash the table or append
 duplicate stale rows.
+GitHub Actions runs this same `make check` baseline on a fixed `macos-15`
+runner for pushes, pull requests, and manual dispatches. The job pins checkout
+by commit, uses read-only repository permissions, and exercises the
+`xcodebuild -list` project parse without Fabric or Twitter credentials.
 
 For functional verification, use Xcode's test action or `xcodebuild test` with
 the appropriate scheme and destination.
@@ -116,6 +120,8 @@ When the required SDK or runtime is unavailable, use static checks and source re
   search failure completion behavior.
 - See `docs/plans/2026-06-09-twitter-loaded-tweet-type-guard.md` for loaded
   tweet table replacement behavior.
+- See `docs/plans/2026-06-10-ci-baseline.md` for the hosted GitHub Actions
+  baseline.
 
 ## Contributing
 
