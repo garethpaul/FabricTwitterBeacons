@@ -40,6 +40,8 @@ Current baseline:
   helper response body.
 - Beacon-triggered tweet loading skips empty search results and prevents
   overlapping guest tweet-load requests.
+- Pending guest login and tweet-load callbacks are discarded when the beacon
+  screen is hidden or immediate proximity ends.
 - Loaded TwitterKit tweet responses are type-checked before replacing the
   visible table contents, avoiding force-cast crashes and duplicate stale rows.
 - Local `.env` and `.xcconfig` files stay ignored because they may contain

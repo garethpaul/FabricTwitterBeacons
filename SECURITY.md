@@ -54,6 +54,10 @@ Loaded TwitterKit tweet responses should be type-checked before updating the
 visible table so malformed response objects do not crash the beacon-triggered
 display path or duplicate stale rows.
 
+Beacon-triggered Twitter callbacks should recheck visible-screen and immediate
+proximity context before authentication continues or loaded tweets become
+visible.
+
 ## Dependency and Supply Chain Security
 
 Dependency updates should come from trusted package managers and should keep lockfiles in sync when lockfiles exist. Do not commit credentials, private keys, tokens, generated secrets, or machine-local configuration. If a vulnerability depends on a compromised package, typosquatting risk, insecure transitive dependency, or unsafe build step, include the package name, affected version, and the path through which it is used.

@@ -1,5 +1,12 @@
 # Changes
 
+## 2026-06-12
+
+- Bound asynchronous guest login and tweet loading to a visible, immediately
+  close beacon context.
+- Discarded callbacks that finish after the screen disappears or proximity
+  changes while still clearing the in-flight loading flag.
+
 ## 2026-06-10
 
 - Reduced beacon permission to when-in-use access, deferred ranging until

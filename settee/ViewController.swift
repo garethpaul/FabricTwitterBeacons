@@ -113,8 +113,16 @@ class ViewController: UITableViewController, CLLocationManagerDelegate, TWTRTwee
         }
     }
 
+    func hasActiveBeaconTweetContext() -> Bool {
+        return isBeaconScreenVisible && prev == 1
+    }
+
     func loadTweets(tweetIDs: [String]) {
         if tweetIDs.isEmpty {
+            return
+        }
+
+        if !self.hasActiveBeaconTweetContext() {
             return
         }
 
@@ -133,10 +141,19 @@ class ViewController: UITableViewController, CLLocationManagerDelegate, TWTRTwee
                 return
             }
 
+            if !self.hasActiveBeaconTweetContext() {
+                self.isLoadingTweets = false
+                return
+            }
+
             // Find the tweets with the tweetIDs
             Twitter.sharedInstance().APIClient.loadTweetsWithIDs(tweetIDs) {
                 (twttrs, error) -> Void in
                 self.isLoadingTweets = false
+
+                if !self.hasActiveBeaconTweetContext() {
+                    return
+                }
 
                 // If there are tweets do something magical
                 if let loadedTweetObjects = twttrs {
