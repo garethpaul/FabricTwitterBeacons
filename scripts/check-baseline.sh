@@ -317,6 +317,13 @@ if ! grep -Fq "status: completed" "$CI_PLAN"; then
   exit 1
 fi
 
+if ! grep -Fq "Status: Completed" "$STALE_TWEET_PLAN" ||
+  ! grep -Fq "27391974765" "$STALE_TWEET_PLAN" ||
+  ! grep -Fq "27391975696" "$STALE_TWEET_PLAN"; then
+  printf '%s\n' "Stale beacon tweet plan must remain completed with hosted verification recorded." >&2
+  exit 1
+fi
+
 if ! grep -Fq "make check" "$TWITTER_REST_JSON_PLAN"; then
   printf '%s\n' "Twitter REST JSON guard plan must record make check verification." >&2
   exit 1

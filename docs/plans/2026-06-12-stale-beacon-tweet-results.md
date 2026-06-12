@@ -1,6 +1,6 @@
 # Stale Beacon Tweet Result Guard
 
-## Status: In Progress
+## Status: Completed
 
 ## Goal
 
@@ -54,3 +54,28 @@ is no longer in immediate proximity.
 The project uses a retired Swift/TwitterKit toolchain. Current hosted Xcode can
 parse the project but does not compile or execute this code, so this focused
 change uses the established source-contract verification boundary.
+
+## Work Completed
+
+- Added `hasActiveBeaconTweetContext()` as the single visible-screen and
+  immediate-proximity predicate.
+- Rechecked that predicate before guest authentication, after authentication,
+  and after tweet loading before table assignment.
+- Kept `isLoadingTweets` reset before the final stale-result exit so moving away
+  or hiding the screen cannot wedge future close-beacon loads.
+- Preserved typed `TWTRTweet` filtering and all existing generic failure logs,
+  search completions, authorization, and result limits.
+- Updated current project/privacy documentation and added count and source-order
+  baseline guards.
+
+## Verification Completed
+
+- `make check` passes locally; Xcode listing is skipped because this Linux host
+  does not provide `xcodebuild`.
+- `git diff --check` passes.
+- Removing the post-login context check makes `make check` fail.
+- Moving tweet assignment before the final context check makes `make check`
+  fail.
+- GitHub Actions push run `27391974765` passed on `macos-15`.
+- GitHub Actions pull-request run `27391975696` passed on `macos-15`; both runs
+  completed `xcodebuild -list -project settee.xcodeproj`.
