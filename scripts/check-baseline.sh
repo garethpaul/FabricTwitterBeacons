@@ -14,6 +14,7 @@ TWITTER_SEARCH_FAILURE_PLAN="$ROOT_DIR/docs/plans/2026-06-09-twitter-search-fail
 TWITTER_TWEET_TYPE_PLAN="$ROOT_DIR/docs/plans/2026-06-09-twitter-loaded-tweet-type-guard.md"
 BEACON_AUTHORIZATION_PLAN="$ROOT_DIR/docs/plans/2026-06-10-beacon-authorization-boundary.md"
 CI_PLAN="$ROOT_DIR/docs/plans/2026-06-10-ci-baseline.md"
+STALE_TWEET_PLAN="$ROOT_DIR/docs/plans/2026-06-12-stale-beacon-tweet-results.md"
 CI_WORKFLOW="$ROOT_DIR/.github/workflows/check.yml"
 
 require_file() {
@@ -48,6 +49,7 @@ for path in \
   "docs/plans/2026-06-09-twitter-loaded-tweet-type-guard.md" \
   "docs/plans/2026-06-10-beacon-authorization-boundary.md" \
   "docs/plans/2026-06-10-ci-baseline.md" \
+  "docs/plans/2026-06-12-stale-beacon-tweet-results.md" \
   "docs/plans/2026-06-09-twitter-log-boundary.md" \
   "docs/plans/2026-06-08-twitter-search-result-limit.md" \
   "docs/plans/2026-06-08-fabric-twitter-beacons-maintenance-baseline.md"; do
@@ -163,12 +165,43 @@ if ! grep -Fq "lint: check" "$ROOT_DIR/Makefile" ||
 fi
 
 loading_reset_count=$(grep -F "self.isLoadingTweets = false" "$ROOT_DIR/settee/ViewController.swift" | wc -l | tr -d ' ')
+active_context_count=$(grep -F "if !self.hasActiveBeaconTweetContext()" "$ROOT_DIR/settee/ViewController.swift" | wc -l | tr -d ' ')
 if ! grep -Fq "if tweetIDs.isEmpty" "$ROOT_DIR/settee/ViewController.swift" ||
+  ! grep -Fq "func hasActiveBeaconTweetContext() -> Bool" "$ROOT_DIR/settee/ViewController.swift" ||
+  ! grep -Fq "return isBeaconScreenVisible && prev == 1" "$ROOT_DIR/settee/ViewController.swift" ||
+  [ "$active_context_count" -ne 3 ] ||
   ! grep -Fq "self.isLoadingTweets = true" "$ROOT_DIR/settee/ViewController.swift" ||
   [ "$loading_reset_count" -lt 2 ]; then
   printf '%s\n' "Tweet loading must skip empty IDs, mark in-flight requests, and clear the loading flag on failure/completion." >&2
   exit 1
 fi
+
+python3 - "$ROOT_DIR/settee/ViewController.swift" <<'PY'
+import sys
+from pathlib import Path
+
+source = Path(sys.argv[1]).read_text(encoding="utf-8")
+checks = []
+start = 0
+needle = "if !self.hasActiveBeaconTweetContext()"
+while True:
+    position = source.find(needle, start)
+    if position == -1:
+        break
+    checks.append(position)
+    start = position + len(needle)
+
+loading_started = source.find("self.isLoadingTweets = true")
+tweet_request = source.find("loadTweetsWithIDs(tweetIDs)")
+loading_reset = source.find("self.isLoadingTweets = false", tweet_request)
+tweet_assignment = source.find("self.tweets = loadedTweets")
+
+if len(checks) != 3 or not (
+    checks[0] < loading_started < checks[1] < tweet_request < loading_reset < checks[2] < tweet_assignment
+):
+    print("Tweet loading must recheck active beacon context before login, request, and result assignment.", file=sys.stderr)
+    raise SystemExit(1)
+PY
 
 if ! grep -Fq "if let loadedTweetObjects = twttrs" "$ROOT_DIR/settee/ViewController.swift" ||
   ! grep -Fq "if let tweet = i as? TWTRTweet" "$ROOT_DIR/settee/ViewController.swift" ||
