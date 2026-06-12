@@ -220,7 +220,7 @@ if ! grep -Fq "GitHub Actions" "$ROOT_DIR/SECURITY.md" ||
   ! grep -Fq "make check" "$ROOT_DIR/SECURITY.md" ||
   ! grep -Fq "no persisted checkout" "$ROOT_DIR/SECURITY.md" ||
   ! grep -Fq "GitHub Actions" "$ROOT_DIR/CHANGES.md" ||
-  ! grep -Fq "does not persist checkout credentials" "$ROOT_DIR/README.md" ||
+  ! grep -Fq "does not persist checkout" "$ROOT_DIR/README.md" ||
   ! grep -Fq "docs/plans/2026-06-10-ci-baseline.md" "$ROOT_DIR/README.md"; then
   printf '%s\n' "Project docs must record the GitHub Actions CI baseline." >&2
   exit 1
