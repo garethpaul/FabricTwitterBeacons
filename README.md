@@ -59,6 +59,9 @@ Run the repository baseline:
 make check
 ```
 
+The Makefile resolves repository paths from its own location, so
+`make -f /absolute/path/to/Makefile check` also works from another directory.
+
 The baseline verifies that Fabric credentials are not committed, raw beacon
 payloads and account-specific Twitter details are not logged, local credential
 files stay ignored, the app `Info.plist` carries location usage copy for beacon
@@ -131,6 +134,8 @@ When the required SDK or runtime is unavailable, use static checks and source re
   tweet table replacement behavior.
 - See `docs/plans/2026-06-10-ci-baseline.md` for the hosted GitHub Actions
   baseline.
+- See `docs/plans/2026-06-12-root-independent-makefile.md` for the portable
+  Makefile verification contract.
 
 ## Contributing
 

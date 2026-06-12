@@ -2,6 +2,8 @@
 
 ## 2026-06-12
 
+- Made the Makefile verification entry point independent of the caller's
+  working directory and added a static contract for the exact path handling.
 - Bound asynchronous guest login and tweet loading to a visible, immediately
   close beacon context.
 - Discarded callbacks that finish after the screen disappears or proximity

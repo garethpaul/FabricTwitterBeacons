@@ -15,7 +15,9 @@ TWITTER_TWEET_TYPE_PLAN="$ROOT_DIR/docs/plans/2026-06-09-twitter-loaded-tweet-ty
 BEACON_AUTHORIZATION_PLAN="$ROOT_DIR/docs/plans/2026-06-10-beacon-authorization-boundary.md"
 CI_PLAN="$ROOT_DIR/docs/plans/2026-06-10-ci-baseline.md"
 STALE_TWEET_PLAN="$ROOT_DIR/docs/plans/2026-06-12-stale-beacon-tweet-results.md"
+ROOT_INDEPENDENT_MAKE_PLAN="$ROOT_DIR/docs/plans/2026-06-12-root-independent-makefile.md"
 CI_WORKFLOW="$ROOT_DIR/.github/workflows/check.yml"
+MAKEFILE="$ROOT_DIR/Makefile"
 
 require_file() {
   path=$1
@@ -50,11 +52,25 @@ for path in \
   "docs/plans/2026-06-10-beacon-authorization-boundary.md" \
   "docs/plans/2026-06-10-ci-baseline.md" \
   "docs/plans/2026-06-12-stale-beacon-tweet-results.md" \
+  "docs/plans/2026-06-12-root-independent-makefile.md" \
   "docs/plans/2026-06-09-twitter-log-boundary.md" \
   "docs/plans/2026-06-08-twitter-search-result-limit.md" \
   "docs/plans/2026-06-08-fabric-twitter-beacons-maintenance-baseline.md"; do
   require_file "$path"
 done
+
+if ! grep -Fq 'ROOT := $(abspath $(dir $(lastword $(MAKEFILE_LIST))))' "$MAKEFILE" ||
+  ! grep -Fq 'CHECK_SCRIPT := $(ROOT)/scripts/check-baseline.sh' "$MAKEFILE" ||
+  ! grep -Fq '"$(CHECK_SCRIPT)"' "$MAKEFILE"; then
+  printf '%s\n' "Makefile must resolve and run the baseline independently of the caller directory." >&2
+  exit 1
+fi
+
+if ! grep -Fqi "## Status: Completed" "$ROOT_INDEPENDENT_MAKE_PLAN" ||
+  ! grep -Fq "make check" "$ROOT_INDEPENDENT_MAKE_PLAN"; then
+  printf '%s\n' "Root-independent Makefile plan must record completed verification." >&2
+  exit 1
+fi
 
 if ! grep -Fq "INFOPLIST_FILE = settee/Info.plist;" "$PROJECT" ||
   ! grep -Fq "NSLocationWhenInUseUsageDescription" "$ROOT_DIR/settee/Info.plist" ||
