@@ -29,4 +29,6 @@ existing static checker unable to detect the regression.
 - `sh -n scripts/check-baseline.sh` and `git diff --check` passed.
 - A hostile mutation restoring `./scripts/check-baseline.sh` was rejected by
   the static contract.
-- Hosted exact-head evidence remains the final pre-merge gate.
+- Implementation head `a6704dedb12dce0dbf8f2fe8bea606337c14613e`
+  passed canonical push run `27427657562` and pull-request run `27427659834`
+  on the fixed macOS runner.
