@@ -2,7 +2,7 @@
 
 ## Repository purpose
 
-`garethpaul/FabricTwitterBeacons` is an Apple platform application or Objective-C/Swift sample. Tweets based on physical proximity to iBeacons.
+`garethpaul/FabricTwitterBeacons` is a legacy Swift iOS sample that ranges a configured iBeacon while its screen is visible and loads nearby Twitter search results through the retired Fabric/TwitterKit stack.
 
 ## Project structure
 
@@ -32,7 +32,7 @@
 
 ## Testing guidance
 
-- Test-related files detected: `setteeTests/setteeTests.swift`
+- `setteeTests/setteeTests.swift` contains only template assertions; do not treat it as meaningful beacon, Twitter, privacy, or lifecycle coverage. The maintained regression gate is `make check`.
 - Start with the narrowest relevant test or Make target, then run `make check` before handing off if the change is not documentation-only.
 - Keep README verification notes in sync when commands, fixtures, or supported toolchains change.
 
@@ -48,9 +48,11 @@
 - Detected references to Twitter. Keep API keys, OAuth credentials, tokens, and account-specific values in local configuration only.
 - Keep `FABRIC_API_KEY`, `FABRIC_BUILD_SECRET`, Twitter credentials, signing identities, and local `.xcconfig` files out of source control.
 - Keep the checked-in app `Info.plist` limited to bundle metadata and reviewed privacy usage descriptions; do not add secrets to it.
+- Request only when-in-use location authorization, start ranging only after authorization while the beacon screen is visible, and stop ranging when authorization is absent or the screen disappears.
 - Treat iBeacon UUIDs and proximity behavior as sensitive physical-device configuration. Do not log beacon payloads or user proximity transitions without a reviewed need.
 - Do not log Twitter usernames, tweet IDs, raw API errors, or account-specific response details from beacon-triggered flows.
-- Beacon-triggered tweet loading skips empty search results and suppresses overlapping guest tweet-load requests.
+- Beacon-triggered tweet loading must limit result IDs, skip empty searches, suppress overlapping guest loads, complete failures with empty results, fail closed on malformed JSON, and type-check loaded TwitterKit objects before replacing visible rows.
+- Hosted macOS CI proves the Xcode project parses and the static contracts pass; it does not prove signing, Fabric/Twitter authentication, beacon ranging, or physical-device behavior.
 
 ## Agent workflow
 
