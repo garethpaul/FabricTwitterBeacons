@@ -70,6 +70,9 @@ project can be listed when `xcodebuild` is installed.
 Loaded TwitterKit tweet objects are type-checked before replacing the visible
 table contents, so unexpected response objects do not crash the table or append
 duplicate stale rows.
+Guest login and tweet-load callbacks recheck that the beacon screen is visible
+and the user remains immediately close before starting or displaying results,
+so stale asynchronous responses cannot repopulate the table after context ends.
 GitHub Actions runs this same `make check` baseline on a fixed `macos-15`
 runner for pushes, pull requests, and manual dispatches. The job pins checkout
 by commit, uses read-only repository permissions, does not persist checkout
@@ -94,6 +97,8 @@ When the required SDK or runtime is unavailable, use static checks and source re
   response details from beacon-triggered flows.
 - Beacon-triggered tweet loading skips empty search results and suppresses
   overlapping guest tweet-load requests.
+- Beacon-triggered authentication and loaded results are discarded if the
+  screen is hidden or immediate proximity ends while callbacks are pending.
 - Loaded TwitterKit tweet responses are type-checked before replacing the
   visible table contents.
 - Malformed Twitter search JSON completes with an empty result instead of
