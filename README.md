@@ -72,8 +72,9 @@ table contents, so unexpected response objects do not crash the table or append
 duplicate stale rows.
 GitHub Actions runs this same `make check` baseline on a fixed `macos-15`
 runner for pushes, pull requests, and manual dispatches. The job pins checkout
-by commit, uses read-only repository permissions, and exercises the
-`xcodebuild -list` project parse without Fabric or Twitter credentials.
+by commit, uses read-only repository permissions, does not persist checkout
+credentials, and exercises the `xcodebuild -list` project parse without Fabric
+or Twitter credentials.
 
 For functional verification, use Xcode's test action or `xcodebuild test` with
 the appropriate scheme and destination.

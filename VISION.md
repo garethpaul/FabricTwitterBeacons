@@ -47,7 +47,8 @@ Current baseline:
 - Xcode project listing is attempted when `xcodebuild` is installed; otherwise
   static checks remain the minimum verification path.
 - GitHub Actions runs the local baseline and Xcode project parse on a fixed
-  macOS runner for pushes, pull requests, and manual dispatches.
+  macOS runner for pushes, pull requests, and manual dispatches without
+  persisting checkout credentials.
 
 Next priorities:
 

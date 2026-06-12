@@ -8,6 +8,8 @@
   `make check` and the hosted Xcode project parse.
 - Added stale-run cancellation and a ten-minute job timeout without introducing
   Fabric, Twitter, signing, or beacon credentials.
+- Disabled checkout credential persistence so the hosted job does not leave its
+  GitHub token available to later steps.
 - Extended the baseline checker and docs to require the hosted CI verification
   path.
 

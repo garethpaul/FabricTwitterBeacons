@@ -205,6 +205,7 @@ fi
 
 if ! grep -Fq "runs-on: macos-15" "$CI_WORKFLOW" ||
   ! grep -Fq "actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10" "$CI_WORKFLOW" ||
+  ! grep -Fq "persist-credentials: false" "$CI_WORKFLOW" ||
   ! grep -Fq "run: make check" "$CI_WORKFLOW" ||
   ! grep -Fq "permissions:" "$CI_WORKFLOW" ||
   ! grep -Fq "contents: read" "$CI_WORKFLOW" ||
@@ -217,7 +218,9 @@ fi
 
 if ! grep -Fq "GitHub Actions" "$ROOT_DIR/SECURITY.md" ||
   ! grep -Fq "make check" "$ROOT_DIR/SECURITY.md" ||
+  ! grep -Fq "no persisted checkout" "$ROOT_DIR/SECURITY.md" ||
   ! grep -Fq "GitHub Actions" "$ROOT_DIR/CHANGES.md" ||
+  ! grep -Fq "does not persist checkout credentials" "$ROOT_DIR/README.md" ||
   ! grep -Fq "docs/plans/2026-06-10-ci-baseline.md" "$ROOT_DIR/README.md"; then
   printf '%s\n' "Project docs must record the GitHub Actions CI baseline." >&2
   exit 1
@@ -304,8 +307,9 @@ if ! grep -Fq "make check" "$CI_PLAN"; then
   exit 1
 fi
 
-if ! grep -Fq "xcodebuild -list" "$CI_PLAN"; then
-  printf '%s\n' "CI baseline plan must record hosted Xcode project parsing." >&2
+if ! grep -Fq "xcodebuild -list" "$CI_PLAN" ||
+  ! grep -Fq "disabled checkout credential persistence" "$CI_PLAN"; then
+  printf '%s\n' "CI baseline plan must record hosted Xcode parsing and credential hardening." >&2
   exit 1
 fi
 

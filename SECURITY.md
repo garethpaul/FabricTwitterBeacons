@@ -33,8 +33,8 @@ Helpful reports include:
 - Review found database, model, query, or persistence-related code; changes in those areas should receive security-focused review before merge.
 - No primary dependency manifest was detected in the repository root. If dependencies are added later, include a manifest and prefer reproducible installation instructions.
 - GitHub Actions runs `make check` and the Xcode project parse on a fixed macOS
-  runner with pinned checkout, read-only repository access, and no Fabric or
-  Twitter credentials.
+  runner with pinned checkout, read-only repository access, no persisted checkout
+  credentials, and no Fabric or Twitter credentials.
 
 ## Mobile Privacy Notes
 
