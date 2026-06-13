@@ -42,6 +42,7 @@ Current baseline:
   overlapping guest tweet-load requests.
 - Pending guest login and tweet-load callbacks are discarded when the beacon
   screen is hidden or immediate proximity ends.
+- Queued hidden-screen ranging callbacks return before search begins.
 - Loaded TwitterKit tweet responses are type-checked before replacing the
   visible table contents, avoiding force-cast crashes and duplicate stale rows.
 - Search, guest-login, and tweet-load callbacks publish controller and table

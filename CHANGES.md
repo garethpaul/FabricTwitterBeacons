@@ -2,6 +2,8 @@
 
 ## 2026-06-13
 
+- Ignored queued ranging callbacks after the beacon screen hides so they cannot
+  start new Twitter searches.
 - Consolidated duplicate `viewWillAppear` overrides while preserving visible-use
   beacon ranging and the navigation-logo animation.
 - Publish asynchronous Twitter controller and table state on the main queue,

@@ -20,6 +20,7 @@ TWEET_PERMALINK_PLAN="$ROOT_DIR/docs/plans/2026-06-13-tweet-permalink-validation
 DEVICE_VERIFICATION_PLAN="$ROOT_DIR/docs/plans/2026-06-13-device-beacon-twitter-verification.md"
 TWITTER_MAIN_QUEUE_PLAN="$ROOT_DIR/docs/plans/2026-06-13-twitter-main-queue-publication.md"
 VIEW_APPEARANCE_PLAN="$ROOT_DIR/docs/plans/2026-06-13-view-appearance-lifecycle-consolidation.md"
+HIDDEN_RANGING_PLAN="$ROOT_DIR/docs/plans/2026-06-13-hidden-ranging-callback-guard.md"
 DEVICE_VERIFICATION="$ROOT_DIR/docs/manual-beacon-twitter-verification.md"
 CI_WORKFLOW="$ROOT_DIR/.github/workflows/check.yml"
 MAKEFILE="$ROOT_DIR/Makefile"
@@ -63,11 +64,42 @@ for path in \
   "docs/plans/2026-06-13-device-beacon-twitter-verification.md" \
   "docs/plans/2026-06-13-twitter-main-queue-publication.md" \
   "docs/plans/2026-06-13-view-appearance-lifecycle-consolidation.md" \
+  "docs/plans/2026-06-13-hidden-ranging-callback-guard.md" \
   "docs/plans/2026-06-09-twitter-log-boundary.md" \
   "docs/plans/2026-06-08-twitter-search-result-limit.md" \
   "docs/plans/2026-06-08-fabric-twitter-beacons-maintenance-baseline.md"; do
   require_file "$path"
 done
+
+python3 - "$ROOT_DIR/settee/ViewController.swift" <<'PY'
+import sys
+from pathlib import Path
+
+source = Path(sys.argv[1]).read_text(encoding="utf-8")
+start = source.find("func locationManager(manager: CLLocationManager!, didRangeBeacons")
+end = source.find("func refreshInvoked()", start)
+callback = source[start:end]
+guard = callback.find("if !isBeaconScreenVisible")
+beacon_access = callback.find("if beacons == nil")
+search = callback.find("Search() { (result: [String]) in")
+if -1 in (start, end, guard, beacon_access, search) or not (guard < beacon_access < search):
+    raise SystemExit("Hidden-screen ranging callbacks must return before beacon access and Twitter search.")
+PY
+
+if ! grep -Fq "status: completed" "$HIDDEN_RANGING_PLAN" ||
+  ! grep -Fq "hostile mutations were rejected" "$HIDDEN_RANGING_PLAN"; then
+  printf '%s\n' "Hidden ranging callback plan must record completed mutation verification." >&2
+  exit 1
+fi
+
+if ! grep -Fq "Queued ranging callbacks return before Twitter search" "$ROOT_DIR/README.md" ||
+  ! grep -Fq "Hidden-screen ranging callbacks must not start Twitter search" "$ROOT_DIR/SECURITY.md" ||
+  ! grep -Fq "Queued hidden-screen ranging callbacks return before search" "$ROOT_DIR/VISION.md" ||
+  ! grep -Fq "Ignored queued ranging callbacks after the beacon screen hides" "$ROOT_DIR/CHANGES.md" ||
+  ! grep -Fq "Ignore queued ranging callbacks after the beacon screen hides" "$ROOT_DIR/AGENTS.md"; then
+  printf '%s\n' "Project guidance must preserve hidden-ranging callback suppression." >&2
+  exit 1
+fi
 
 if ! grep -Fq 'ROOT := $(abspath $(dir $(lastword $(MAKEFILE_LIST))))' "$MAKEFILE" ||
   ! grep -Fq 'CHECK_SCRIPT := $(ROOT)/scripts/check-baseline.sh' "$MAKEFILE" ||

@@ -49,6 +49,8 @@
 - Keep `FABRIC_API_KEY`, `FABRIC_BUILD_SECRET`, Twitter credentials, signing identities, and local `.xcconfig` files out of source control.
 - Keep the checked-in app `Info.plist` limited to bundle metadata and reviewed privacy usage descriptions; do not add secrets to it.
 - Request only when-in-use location authorization, start ranging only after authorization while the beacon screen is visible, and stop ranging when authorization is absent or the screen disappears.
+- Ignore queued ranging callbacks after the beacon screen hides before any
+  beacon inspection or Twitter search begins.
 - Keep visible-use beacon ranging and navigation-logo animation in one `viewWillAppear` override.
 - Treat iBeacon UUIDs and proximity behavior as sensitive physical-device configuration. Do not log beacon payloads or user proximity transitions without a reviewed need.
 - Do not log Twitter usernames, tweet IDs, raw API errors, or account-specific response details from beacon-triggered flows.

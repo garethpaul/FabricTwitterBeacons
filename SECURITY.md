@@ -64,6 +64,9 @@ Beacon-triggered Twitter callbacks should recheck visible-screen and immediate
 proximity context before authentication continues or loaded tweets become
 visible.
 
+Hidden-screen ranging callbacks must not start Twitter search after ranging is
+stopped for view disappearance.
+
 Twitter search, login, and load callback state plus visible table publication
 should occur on the main queue, with stale beacon context rejected before tweet
 assignment.

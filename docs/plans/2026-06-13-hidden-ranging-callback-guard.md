@@ -2,7 +2,7 @@
 title: Hidden Ranging Callback Guard
 type: reliability
 date: 2026-06-13
-status: in progress
+status: completed
 execution: code
 ---
 
@@ -33,3 +33,14 @@ they cannot start new guest Twitter searches while the view is hidden.
 ## Non-Goals
 
 - Replacing Fabric/TwitterKit or claiming a device beacon/Twitter run.
+
+## Verification
+
+- `make check`, `make lint`, `make test`, and `make build` passed the portable
+  privacy, lifecycle, project, and documentation baseline.
+- Four hostile mutations were rejected across guard removal, post-search
+  ordering, documentation, and completed-plan evidence.
+- Shell syntax, plist parsing, diff, exact-path, signing/secret, and artifact
+  checks passed.
+- Xcode, signing, beacon hardware, Fabric/Twitter authentication, and physical
+  device behavior were unavailable and are not claimed.
