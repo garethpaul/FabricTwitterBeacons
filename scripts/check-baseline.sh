@@ -17,6 +17,8 @@ CI_PLAN="$ROOT_DIR/docs/plans/2026-06-10-ci-baseline.md"
 STALE_TWEET_PLAN="$ROOT_DIR/docs/plans/2026-06-12-stale-beacon-tweet-results.md"
 ROOT_INDEPENDENT_MAKE_PLAN="$ROOT_DIR/docs/plans/2026-06-12-root-independent-makefile.md"
 TWEET_PERMALINK_PLAN="$ROOT_DIR/docs/plans/2026-06-13-tweet-permalink-validation.md"
+DEVICE_VERIFICATION_PLAN="$ROOT_DIR/docs/plans/2026-06-13-device-beacon-twitter-verification.md"
+DEVICE_VERIFICATION="$ROOT_DIR/docs/manual-beacon-twitter-verification.md"
 CI_WORKFLOW="$ROOT_DIR/.github/workflows/check.yml"
 MAKEFILE="$ROOT_DIR/Makefile"
 
@@ -44,6 +46,7 @@ for path in \
   "settee/TVSearchAPI.swift" \
   "settee/RESTApi.swift" \
   "setteeTests/setteeTests.swift" \
+  "docs/manual-beacon-twitter-verification.md" \
   "docs/plans/2026-06-09-location-usage-plist.md" \
   "docs/plans/2026-06-09-twitter-load-inflight-guard.md" \
   "docs/plans/2026-06-09-twitter-search-json-guard.md" \
@@ -55,6 +58,7 @@ for path in \
   "docs/plans/2026-06-12-stale-beacon-tweet-results.md" \
   "docs/plans/2026-06-12-root-independent-makefile.md" \
   "docs/plans/2026-06-13-tweet-permalink-validation.md" \
+  "docs/plans/2026-06-13-device-beacon-twitter-verification.md" \
   "docs/plans/2026-06-09-twitter-log-boundary.md" \
   "docs/plans/2026-06-08-twitter-search-result-limit.md" \
   "docs/plans/2026-06-08-fabric-twitter-beacons-maintenance-baseline.md"; do
@@ -417,6 +421,115 @@ if ! grep -Fq "credential-free HTTPS" "$ROOT_DIR/README.md" ||
   ! grep -Fq "credential-free HTTPS permalinks" "$ROOT_DIR/VISION.md" ||
   ! grep -Fq "Validated selected tweet permalinks" "$ROOT_DIR/CHANGES.md"; then
   printf '%s\n' "Project guidance must document tweet permalink validation." >&2
+  exit 1
+fi
+
+python3 - "$DEVICE_VERIFICATION" <<'PY'
+import sys
+from pathlib import Path
+
+source = Path(sys.argv[1]).read_text(encoding="utf-8")
+required_sections = {
+    "Status And Evidence Boundary": [
+        "was not executed during the Linux maintenance session",
+        "Static Linux checks and hosted Xcode project listing do not satisfy this physical-device run.",
+        "Do not convert `make check`, `xcodebuild -list`, or a green hosted job",
+        "owned by the tester or explicitly authorized for testing",
+    ],
+    "Prerequisites": [
+        "physical iOS device",
+        "simulator is not sufficient for beacon ranging",
+        "controlled test beacon",
+        "tester-controlled Twitter account",
+        "fixed hashtag search may surface third-party public content",
+        "do not copy, screenshot, publish, or retain that content as test evidence",
+    ],
+    "Authorization And Screen Lifecycle": [
+        "only when-in-use location authorization",
+        "does not request always-on location access",
+        "Deny location access",
+        "ranging starts only after authorization",
+        "Confirm ranging stops",
+    ],
+    "Proximity And Tweet Loading": [
+        "unknown` proximity",
+        "no Twitter guest load begins before",
+        "immediate proximity",
+        "one bounded search/load begins",
+        "overlapping guest/tweet loads do not start",
+        "Move from immediate to near proximity",
+        "stale tweet rows clear",
+        "record any retained-row behavior as an observed limitation",
+    ],
+    "Stale Async Results": [
+        "leave immediate proximity before guest authentication or tweet loading completes",
+        "late callback does not repopulate the table",
+        "hiding or leaving the beacon screen before completion",
+    ],
+    "Permalink Navigation": [
+        "credential-free HTTPS permalink",
+        "non-empty hostname",
+        "invalid, non-HTTPS, hostless, or credential-bearing test URL",
+        "no request is loaded",
+        "rejected URL or tweet details are not logged",
+    ],
+    "Failure And Privacy Checks": [
+        "failure is generic",
+        "empty/no replacement results",
+        "no beacon UUID/major/minor values",
+        "no account, credential, token, or raw error details",
+        "Do not mark dependent steps passed.",
+    ],
+    "Cleanup And Evidence Record": [
+        "Rotate a credential immediately",
+        "commit SHA",
+        "physical device model",
+        "pass/fail/blocked result for every checklist item",
+        "scrubbed of beacon identifiers",
+        "prove source/project contracts only",
+    ],
+}
+
+sections = {}
+current = None
+for line in source.splitlines():
+    if line.startswith("## "):
+        current = line[3:]
+        sections[current] = []
+    elif current is not None:
+        sections[current].append(line)
+
+for heading, phrases in required_sections.items():
+    body = "\n".join(sections.get(heading, []))
+    if not body:
+        raise SystemExit("Beacon/Twitter checklist section missing: " + heading)
+    normalized_body = " ".join(body.split())
+    for phrase in phrases:
+        if " ".join(phrase.split()) not in normalized_body:
+            raise SystemExit(
+                "Beacon/Twitter checklist assertion missing from "
+                + heading
+                + ": "
+                + phrase
+            )
+PY
+
+if ! grep -Fq "status: completed" "$DEVICE_VERIFICATION_PLAN" ||
+  ! grep -Fq "hostile mutations were rejected" "$DEVICE_VERIFICATION_PLAN" ||
+  ! grep -Fq "physical-device checklist remains unexecuted" "$DEVICE_VERIFICATION_PLAN" ||
+  ! grep -Fq "bounded exact-head macOS/CodeQL snapshot" "$DEVICE_VERIFICATION_PLAN"; then
+  printf '%s\n' "Device beacon/Twitter verification plan must record completed local verification." >&2
+  exit 1
+fi
+
+if ! grep -Fq "docs/manual-beacon-twitter-verification.md" "$ROOT_DIR/README.md" ||
+  ! grep -Fq "docs/manual-beacon-twitter-verification.md" "$ROOT_DIR/AGENTS.md" ||
+  ! grep -Fq "docs/manual-beacon-twitter-verification.md" "$ROOT_DIR/SECURITY.md" ||
+  ! grep -Fq "without claiming that the checklist has been executed" "$ROOT_DIR/VISION.md" ||
+  grep -Fq "Add clearer README verification steps for beacon and Twitter behavior" "$ROOT_DIR/VISION.md" ||
+  grep -Fq "Add tests or manual checklists around rate limits and proximity handling" "$ROOT_DIR/VISION.md" ||
+  ! grep -Fq "truthful signed-device checklist" "$ROOT_DIR/CHANGES.md"; then
+  printf '%s\n' "Project guidance must preserve truthful beacon/Twitter device verification boundaries." >&2
   exit 1
 fi
 

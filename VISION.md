@@ -53,13 +53,17 @@ Current baseline:
 - GitHub Actions runs the local baseline and Xcode project parse on a fixed
   macOS runner for pushes, pull requests, and manual dispatches without
   persisting checkout credentials.
+- A physical-device checklist now covers when-in-use authorization,
+  visible-screen ranging, proximity transitions, bounded Twitter loads, stale
+  callbacks, permalink navigation, privacy failures, cleanup, and redacted
+  evidence without claiming that the checklist has been executed.
 
 Next priorities:
 
-- Add clearer README verification steps for beacon and Twitter behavior
 - Move beacon and Twitter configuration into documented local settings
 - Modernize Fabric/Twitter dependencies only in a dedicated pass
-- Add tests or manual checklists around rate limits and proximity handling
+- Add executable rate-limit, lifecycle, and proximity integration tests after
+  the retired dependencies can be isolated or replaced
 
 Contribution rules:
 

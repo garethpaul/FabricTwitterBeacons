@@ -4,6 +4,9 @@
 
 - Validated selected tweet permalinks as credential-free HTTPS URLs with a host
   before creating an in-app web request.
+- Added a truthful signed-device checklist for beacon authorization, proximity,
+  bounded Twitter loading, stale callbacks, permalink navigation, failures,
+  cleanup, and redacted evidence; the Linux session did not execute it.
 
 ## 2026-06-12
 

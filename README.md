@@ -84,8 +84,12 @@ by commit, uses read-only repository permissions, does not persist checkout
 credentials, and exercises the `xcodebuild -list` project parse without Fabric
 or Twitter credentials.
 
-For functional verification, use Xcode's test action or `xcodebuild test` with
-the appropriate scheme and destination.
+For functional verification, follow
+[`docs/manual-beacon-twitter-verification.md`](docs/manual-beacon-twitter-verification.md)
+on a signed physical device with tester-controlled beacon hardware, account
+configuration, and public test content. The checklist is defined but was not
+executed by this Linux maintenance session; hosted project listing is not
+physical-device runtime evidence.
 
 When the required SDK or runtime is unavailable, use static checks and source review first, then verify on a machine that has the matching platform toolchain.
 
@@ -140,6 +144,9 @@ When the required SDK or runtime is unavailable, use static checks and source re
   Makefile verification contract.
 - See `docs/plans/2026-06-13-tweet-permalink-validation.md` for the in-app tweet
   navigation boundary.
+- See `docs/manual-beacon-twitter-verification.md` for the physical-device
+  authorization, ranging, proximity, Twitter, stale-result, permalink, privacy,
+  cleanup, and redacted-evidence checklist.
 
 ## Contributing
 

@@ -61,6 +61,11 @@ Beacon-triggered Twitter callbacks should recheck visible-screen and immediate
 proximity context before authentication continues or loaded tweets become
 visible.
 
+Runtime beacon/Twitter claims require the signed physical-device checklist in
+`docs/manual-beacon-twitter-verification.md`, tester-controlled hardware and
+accounts, and redacted evidence. Static checks and hosted project listing do not
+prove authorization, ranging, proximity, Twitter, or navigation behavior.
+
 ## Dependency and Supply Chain Security
 
 Dependency updates should come from trusted package managers and should keep lockfiles in sync when lockfiles exist. Do not commit credentials, private keys, tokens, generated secrets, or machine-local configuration. If a vulnerability depends on a compromised package, typosquatting risk, insecure transitive dependency, or unsafe build step, include the package name, affected version, and the path through which it is used.

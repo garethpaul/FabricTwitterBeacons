@@ -1,7 +1,7 @@
 ---
 title: Physical-Device Beacon And Twitter Verification
 type: verification
-status: planned
+status: completed
 date: 2026-06-13
 ---
 
@@ -198,3 +198,36 @@ hosted-project, and physical-device evidence.
   files, credential-like additions, signing artifacts, and generated artifacts.
 - Push normally, open a stacked PR on the green permalink branch, and take one
   bounded exact-head macOS/CodeQL snapshot without a polling loop.
+
+---
+
+## Verification
+
+- An isolated full `make check` passed with the completed-plan contract enabled;
+  local `xcodebuild` was explicitly unavailable on Linux.
+- Fourteen isolated hostile mutations were rejected for weakened physical-device,
+  when-in-use authorization, screen-stop, immediate-only, bounded-load,
+  overlapping-load, stale-result, immediate-to-near clearing, third-party
+  content handling, generic privacy-log, HTTPS permalink, static-evidence-limit,
+  roadmap, and plan-status requirements.
+- The physical-device checklist remains unexecuted. No app build/signing,
+  beacon ranging, Twitter authentication/search/load, permalink navigation,
+  account, credential, controlled tweet, or runtime log was used.
+- Plan-based review found and fixed an overbroad stale-row-clearing claim and an
+  impossible guarantee that live fixed-hashtag results were tester-controlled;
+  no actionable review findings remain.
+- Shell syntax, all four maintained Make targets, both plist parses,
+  `git diff --check`, exact eight-path review, unchanged source/test/project/
+  framework/workflow/Makefile/ignore inspection, credential and signing
+  inspection, and generated-artifact inspection passed.
+- The exact pushed head still requires one bounded exact-head macOS/CodeQL snapshot;
+  hosted project listing will remain separate from physical-device evidence.
+
+## Work Completed
+
+- Added the authorization, lifecycle, proximity, Twitter, stale-result,
+  permalink, failure/privacy, cleanup, and redacted-evidence checklist.
+- Added section-scoped maintenance contracts that normalize Markdown whitespace
+  without allowing unrelated repository prose to satisfy checklist assertions.
+- Updated current contributor, security, roadmap, maintenance, and change
+  guidance while preserving the explicit unexecuted runtime status.
