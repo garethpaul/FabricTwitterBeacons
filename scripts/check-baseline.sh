@@ -18,6 +18,7 @@ STALE_TWEET_PLAN="$ROOT_DIR/docs/plans/2026-06-12-stale-beacon-tweet-results.md"
 ROOT_INDEPENDENT_MAKE_PLAN="$ROOT_DIR/docs/plans/2026-06-12-root-independent-makefile.md"
 TWEET_PERMALINK_PLAN="$ROOT_DIR/docs/plans/2026-06-13-tweet-permalink-validation.md"
 DEVICE_VERIFICATION_PLAN="$ROOT_DIR/docs/plans/2026-06-13-device-beacon-twitter-verification.md"
+TWITTER_MAIN_QUEUE_PLAN="$ROOT_DIR/docs/plans/2026-06-13-twitter-main-queue-publication.md"
 DEVICE_VERIFICATION="$ROOT_DIR/docs/manual-beacon-twitter-verification.md"
 CI_WORKFLOW="$ROOT_DIR/.github/workflows/check.yml"
 MAKEFILE="$ROOT_DIR/Makefile"
@@ -59,6 +60,7 @@ for path in \
   "docs/plans/2026-06-12-root-independent-makefile.md" \
   "docs/plans/2026-06-13-tweet-permalink-validation.md" \
   "docs/plans/2026-06-13-device-beacon-twitter-verification.md" \
+  "docs/plans/2026-06-13-twitter-main-queue-publication.md" \
   "docs/plans/2026-06-09-twitter-log-boundary.md" \
   "docs/plans/2026-06-08-twitter-search-result-limit.md" \
   "docs/plans/2026-06-08-fabric-twitter-beacons-maintenance-baseline.md"; do
@@ -223,6 +225,64 @@ if len(checks) != 3 or not (
 ):
     print("Tweet loading must recheck active beacon context before login, request, and result assignment.", file=sys.stderr)
     raise SystemExit(1)
+PY
+
+python3 - "$ROOT_DIR/settee/ViewController.swift" <<'PY'
+import pathlib
+import sys
+
+source = pathlib.Path(sys.argv[1]).read_text()
+load_start = source.find("func loadTweets(tweetIDs: [String])")
+load_end = source.find("override func didReceiveMemoryWarning()", load_start)
+load = source[load_start:load_end]
+
+search_callback = source.find("Search() { (result: [String]) in")
+search_dispatch = source.find(
+    "dispatch_async(dispatch_get_main_queue())", search_callback
+)
+load_invocation = source.find("self.loadTweets(result)", search_dispatch)
+
+guest_callback = load.find("logInGuestWithCompletion")
+guest_dispatch = load.find("dispatch_async(dispatch_get_main_queue())", guest_callback)
+session_failure = load.find("if session == nil", guest_dispatch)
+tweet_request = load.find("loadTweetsWithIDs(tweetIDs)", session_failure)
+result_dispatch = load.find("dispatch_async(dispatch_get_main_queue())", tweet_request)
+loading_reset = load.find("self.isLoadingTweets = false", result_dispatch)
+stale_check = load.find("if !self.hasActiveBeaconTweetContext()", loading_reset)
+tweet_assignment = load.find("self.tweets = loadedTweets", stale_check)
+
+positions = (
+    search_callback,
+    search_dispatch,
+    load_invocation,
+    load_start,
+    load_end,
+    guest_callback,
+    guest_dispatch,
+    session_failure,
+    tweet_request,
+    result_dispatch,
+    loading_reset,
+    stale_check,
+    tweet_assignment,
+)
+if -1 in positions or not (
+    search_callback < search_dispatch < load_invocation and
+    guest_callback < guest_dispatch < session_failure < tweet_request <
+    result_dispatch < loading_reset < stale_check < tweet_assignment
+):
+    raise SystemExit(
+        "Twitter callbacks must publish state on the main queue after stale-context validation"
+    )
+
+if source.count("dispatch_async(dispatch_get_main_queue())") != 3 or load.count(
+    "dispatch_async(dispatch_get_main_queue())"
+) != 2 or load.count(
+    "self.tweets = loadedTweets"
+) != 1:
+    raise SystemExit(
+        "Twitter callbacks must retain three main-queue boundaries and one publication"
+    )
 PY
 
 if ! grep -Fq "if let loadedTweetObjects = twttrs" "$ROOT_DIR/settee/ViewController.swift" ||
@@ -413,6 +473,22 @@ if ! grep -Fq "status: completed" "$TWEET_PERMALINK_PLAN" ||
   ! grep -Fq "guard bypass mutation failed" "$TWEET_PERMALINK_PLAN" ||
   ! grep -Fq "hosted macOS check" "$TWEET_PERMALINK_PLAN"; then
   printf '%s\n' "Tweet permalink plan must record completed local verification." >&2
+  exit 1
+fi
+
+if ! grep -Fq "status: completed" "$TWITTER_MAIN_QUEUE_PLAN" ||
+  ! grep -Fq "hostile mutations were rejected" "$TWITTER_MAIN_QUEUE_PLAN" ||
+  ! grep -Fq "xcodebuild was unavailable" "$TWITTER_MAIN_QUEUE_PLAN" ||
+  ! grep -Fq "No Twitter credentials" "$TWITTER_MAIN_QUEUE_PLAN"; then
+  printf '%s\n' "Twitter main-queue publication plan must record completed local verification." >&2
+  exit 1
+fi
+
+if ! grep -Fq "Search, guest-login, and tweet-load callbacks publish controller and table" "$ROOT_DIR/README.md" ||
+  ! grep -Fq "Twitter search, login, and load callback state plus visible table publication" "$ROOT_DIR/SECURITY.md" ||
+  ! grep -Fq "Search, guest-login, and tweet-load callbacks publish controller and table" "$ROOT_DIR/VISION.md" ||
+  ! grep -Fq "Publish asynchronous Twitter controller and table state on the main queue" "$ROOT_DIR/CHANGES.md"; then
+  printf '%s\n' "Project guidance must preserve main-queue Twitter state publication." >&2
   exit 1
 fi
 

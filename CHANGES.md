@@ -2,6 +2,8 @@
 
 ## 2026-06-13
 
+- Publish asynchronous Twitter controller and table state on the main queue,
+  retaining stale beacon-context validation before tweet assignment.
 - Validated selected tweet permalinks as credential-free HTTPS URLs with a host
   before creating an in-app web request.
 - Added a truthful signed-device checklist for beacon authorization, proximity,

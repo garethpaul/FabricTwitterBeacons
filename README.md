@@ -78,6 +78,9 @@ URLs with a hostname; rejected link details are not logged.
 Guest login and tweet-load callbacks recheck that the beacon screen is visible
 and the user remains immediately close before starting or displaying results,
 so stale asynchronous responses cannot repopulate the table after context ends.
+Search, guest-login, and tweet-load callbacks publish controller and table
+state only on the main queue, with the stale-context check preceding successful
+tweet visibility.
 GitHub Actions runs this same `make check` baseline on a fixed `macos-15`
 runner for pushes, pull requests, and manual dispatches. The job pins checkout
 by commit, uses read-only repository permissions, does not persist checkout

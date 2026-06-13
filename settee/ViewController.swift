@@ -151,43 +151,46 @@ class ViewController: UITableViewController, CLLocationManagerDelegate, TWTRTwee
 
         // load tweets with guest login
         Twitter.sharedInstance().logInGuestWithCompletion { (session: TWTRGuestSession!, error: NSError!) in
-            if session == nil {
-                self.isLoadingTweets = false
-                println("Twitter guest login failed")
-                return
-            }
-
-            if !self.hasActiveBeaconTweetContext() {
-                self.isLoadingTweets = false
-                return
-            }
-
-            // Find the tweets with the tweetIDs
-            Twitter.sharedInstance().APIClient.loadTweetsWithIDs(tweetIDs) {
-                (twttrs, error) -> Void in
-                self.isLoadingTweets = false
-
-                if !self.hasActiveBeaconTweetContext() {
+            dispatch_async(dispatch_get_main_queue()) {
+                if session == nil {
+                    self.isLoadingTweets = false
+                    println("Twitter guest login failed")
                     return
                 }
 
-                // If there are tweets do something magical
-                if let loadedTweetObjects = twttrs {
+                if !self.hasActiveBeaconTweetContext() {
+                    self.isLoadingTweets = false
+                    return
+                }
 
-                    var loadedTweets: [TWTRTweet] = []
-                    // Only display typed TwitterKit tweet objects from the response.
-                    for i in loadedTweetObjects {
-                        // Append the Tweet to the Tweets to display in the table view.
-                        if let tweet = i as? TWTRTweet {
-                            loadedTweets.append(tweet)
+                // Find the tweets with the tweetIDs
+                Twitter.sharedInstance().APIClient.loadTweetsWithIDs(tweetIDs) {
+                    (twttrs, error) -> Void in
+                    dispatch_async(dispatch_get_main_queue()) {
+                        self.isLoadingTweets = false
+
+                        if !self.hasActiveBeaconTweetContext() {
+                            return
+                        }
+
+                        // If there are tweets do something magical
+                        if let loadedTweetObjects = twttrs {
+
+                            var loadedTweets: [TWTRTweet] = []
+                            // Only display typed TwitterKit tweet objects from the response.
+                            for i in loadedTweetObjects {
+                                // Append the Tweet to the Tweets to display in the table view.
+                                if let tweet = i as? TWTRTweet {
+                                    loadedTweets.append(tweet)
+                                }
+                            }
+
+                            self.tweets = loadedTweets
+                        } else {
+                            println("Twitter tweet load failed")
                         }
                     }
-
-                    self.tweets = loadedTweets
-                } else {
-                    println("Twitter tweet load failed")
                 }
-                
             }
         }
         
@@ -227,9 +230,10 @@ class ViewController: UITableViewController, CLLocationManagerDelegate, TWTRTwee
 
                     // Send a request to the Search API. Check out TVSearchAPI.swift for details..
                     Search() { (result: [String]) in
-
-                        // Load the array back to display the Tweets
-                        self.loadTweets(result)
+                        dispatch_async(dispatch_get_main_queue()) {
+                            // Load the array back to display the Tweets
+                            self.loadTweets(result)
+                        }
                     }
 
 

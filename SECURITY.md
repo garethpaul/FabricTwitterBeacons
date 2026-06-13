@@ -61,6 +61,10 @@ Beacon-triggered Twitter callbacks should recheck visible-screen and immediate
 proximity context before authentication continues or loaded tweets become
 visible.
 
+Twitter search, login, and load callback state plus visible table publication
+should occur on the main queue, with stale beacon context rejected before tweet
+assignment.
+
 Runtime beacon/Twitter claims require the signed physical-device checklist in
 `docs/manual-beacon-twitter-verification.md`, tester-controlled hardware and
 accounts, and redacted evidence. Static checks and hosted project listing do not
