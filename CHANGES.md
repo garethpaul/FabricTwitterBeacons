@@ -2,6 +2,8 @@
 
 ## 2026-06-13
 
+- Consolidated duplicate `viewWillAppear` overrides while preserving visible-use
+  beacon ranging and the navigation-logo animation.
 - Publish asynchronous Twitter controller and table state on the main queue,
   retaining stale beacon-context validation before tweet assignment.
 - Validated selected tweet permalinks as credential-free HTTPS URLs with a host

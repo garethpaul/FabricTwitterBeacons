@@ -44,6 +44,9 @@ Beacon ranging should use only when-in-use location authorization, should not
 start before authorization is granted, and should stop when its screen is no
 longer visible.
 
+The beacon controller should keep visible-use ranging and logo animation in one
+`viewWillAppear` override so the lifecycle compiles and both behaviors remain ordered.
+
 Twitter search and legacy REST JSON parsing should fail closed without
 force-unwrapping malformed response bodies or logging account-specific details.
 

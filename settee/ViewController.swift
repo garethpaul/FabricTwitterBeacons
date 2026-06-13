@@ -119,6 +119,11 @@ class ViewController: UITableViewController, CLLocationManagerDelegate, TWTRTwee
         if CLLocationManager.authorizationStatus() == CLAuthorizationStatus.Authorized {
             locationManager.startRangingBeaconsInRegion(region)
         }
+
+        // Animate the logo when the view appears.
+        UIView.animateWithDuration(0.6, delay: 0, usingSpringWithDamping: 0.5, initialSpringVelocity: 0.8, options: .CurveEaseInOut, animations: { () -> Void in
+            self.lView.frame.origin.y = 22
+            }, completion: nil)
     }
 
     func locationManager(manager: CLLocationManager!, didChangeAuthorizationStatus status: CLAuthorizationStatus) {
@@ -344,16 +349,6 @@ class ViewController: UITableViewController, CLLocationManagerDelegate, TWTRTwee
         } else {
             return self.tableView.estimatedRowHeight
         }
-    }
-
-    override func viewWillAppear(animated: Bool) {
-        super.viewWillAppear(animated)
-
-        // Animate the logo when the view appears.
-        UIView.animateWithDuration(0.6, delay: 0, usingSpringWithDamping: 0.5, initialSpringVelocity: 0.8, options: .CurveEaseInOut, animations: { () -> Void in
-            // Place the frame at the correct origin position.
-            self.lView.frame.origin.y = 22
-            }, completion: nil)
     }
 
     override func viewDidAppear(animated: Bool) {

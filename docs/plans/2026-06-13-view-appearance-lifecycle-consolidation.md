@@ -2,11 +2,13 @@
 title: View Appearance Lifecycle Consolidation
 type: correctness
 date: 2026-06-13
-status: planned
+status: completed
 execution: code
 ---
 
 # View Appearance Lifecycle Consolidation
+
+## Status: Completed
 
 ## Summary
 
@@ -45,3 +47,24 @@ declaration before either behavior can run.
 
 - Modernizing the legacy Swift or TwitterKit/Fabric APIs.
 - Changing beacon regions, authorization scope, tweet loading, or UI design.
+
+## Work Completed
+
+- Moved the existing logo animation into the visible-use `viewWillAppear`
+  override after authorization-aware ranging setup.
+- Removed the duplicate override that prevented Swift compilation.
+- Added uniqueness and source-order contracts plus synchronized maintenance
+  guidance.
+
+## Verification Completed
+
+- The focused lifecycle contract found exactly one override with one super
+  call, visibility publication, authorized ranging, and logo animation in order.
+- `make check`, `make lint`, `make test`, and `make build` passed the maintained
+  Linux baseline; local xcodebuild was unavailable and is not claimed.
+- `sh -n scripts/check-baseline.sh` and `git diff --check` passed.
+- Six isolated hostile mutations were rejected: duplicate override, missing
+  visibility, missing ranging, missing animation, stale plan status, and missing
+  mutation evidence.
+- No Fabric/Twitter credentials, signing, beacon hardware, physical-device
+  ranging, or live Twitter request was used.

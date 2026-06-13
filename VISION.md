@@ -46,6 +46,7 @@ Current baseline:
   visible table contents, avoiding force-cast crashes and duplicate stale rows.
 - Search, guest-login, and tweet-load callbacks publish controller and table
   state on the main queue after the applicable stale beacon-context check.
+- One `viewWillAppear` override owns visible-use ranging and logo animation.
 - Tweet selection validates credential-free HTTPS permalinks with a hostname
   before in-app navigation.
 - Local `.env` and `.xcconfig` files stay ignored because they may contain

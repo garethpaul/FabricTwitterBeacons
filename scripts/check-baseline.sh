@@ -19,6 +19,7 @@ ROOT_INDEPENDENT_MAKE_PLAN="$ROOT_DIR/docs/plans/2026-06-12-root-independent-mak
 TWEET_PERMALINK_PLAN="$ROOT_DIR/docs/plans/2026-06-13-tweet-permalink-validation.md"
 DEVICE_VERIFICATION_PLAN="$ROOT_DIR/docs/plans/2026-06-13-device-beacon-twitter-verification.md"
 TWITTER_MAIN_QUEUE_PLAN="$ROOT_DIR/docs/plans/2026-06-13-twitter-main-queue-publication.md"
+VIEW_APPEARANCE_PLAN="$ROOT_DIR/docs/plans/2026-06-13-view-appearance-lifecycle-consolidation.md"
 DEVICE_VERIFICATION="$ROOT_DIR/docs/manual-beacon-twitter-verification.md"
 CI_WORKFLOW="$ROOT_DIR/.github/workflows/check.yml"
 MAKEFILE="$ROOT_DIR/Makefile"
@@ -61,6 +62,7 @@ for path in \
   "docs/plans/2026-06-13-tweet-permalink-validation.md" \
   "docs/plans/2026-06-13-device-beacon-twitter-verification.md" \
   "docs/plans/2026-06-13-twitter-main-queue-publication.md" \
+  "docs/plans/2026-06-13-view-appearance-lifecycle-consolidation.md" \
   "docs/plans/2026-06-09-twitter-log-boundary.md" \
   "docs/plans/2026-06-08-twitter-search-result-limit.md" \
   "docs/plans/2026-06-08-fabric-twitter-beacons-maintenance-baseline.md"; do
@@ -99,6 +101,30 @@ if ! grep -Fq "locationManager.requestWhenInUseAuthorization()" "$ROOT_DIR/sette
   printf '%s\n' "Beacon ranging must require foreground authorization and follow view visibility." >&2
   exit 1
 fi
+
+python3 - "$ROOT_DIR/settee/ViewController.swift" <<'PY'
+import sys
+from pathlib import Path
+
+source = Path(sys.argv[1]).read_text(encoding="utf-8")
+signature = "override func viewWillAppear(animated: Bool)"
+if source.count(signature) != 1:
+    raise SystemExit("ViewController must declare exactly one viewWillAppear override.")
+
+body = source.split(signature, 1)[1].split("    func locationManager", 1)[0]
+contracts = (
+    "super.viewWillAppear(animated)",
+    "isBeaconScreenVisible = true",
+    "locationManager.startRangingBeaconsInRegion(region)",
+    "UIView.animateWithDuration(0.6",
+    "self.lView.frame.origin.y = 22",
+)
+if any(body.count(contract) != 1 for contract in contracts):
+    raise SystemExit("View appearance lifecycle contracts must remain unique.")
+positions = [body.index(contract) for contract in contracts]
+if positions != sorted(positions):
+    raise SystemExit("View appearance must publish visibility and ranging before logo animation.")
+PY
 
 if grep -Fq "abb870ac2c6cd77fc0a3ee166f786a86748f4eb9" "$PROJECT" ||
   grep -Fq "47d331d25396fd56e08c5c5891c16a003ba5647e584bf8fc07feb0e8ae92ab92" "$PROJECT" ||
@@ -481,6 +507,29 @@ if ! grep -Fq "status: completed" "$TWITTER_MAIN_QUEUE_PLAN" ||
   ! grep -Fq "xcodebuild was unavailable" "$TWITTER_MAIN_QUEUE_PLAN" ||
   ! grep -Fq "No Twitter credentials" "$TWITTER_MAIN_QUEUE_PLAN"; then
   printf '%s\n' "Twitter main-queue publication plan must record completed local verification." >&2
+  exit 1
+fi
+
+for appearance_plan_contract in \
+  "status: completed" \
+  "## Status: Completed" \
+  "exactly one override" \
+  "make build" \
+  "Six isolated hostile mutations were rejected" \
+  "xcodebuild was unavailable" \
+  "No Fabric/Twitter credentials"; do
+  if ! grep -Fq "$appearance_plan_contract" "$VIEW_APPEARANCE_PLAN"; then
+    printf '%s\n' "View appearance plan must record completed verification: $appearance_plan_contract" >&2
+    exit 1
+  fi
+done
+
+if ! grep -Fq 'one `viewWillAppear` lifecycle override' "$ROOT_DIR/README.md" ||
+  ! grep -Fq '`viewWillAppear` override so the lifecycle compiles' "$ROOT_DIR/SECURITY.md" ||
+  ! grep -Fq 'One `viewWillAppear` override' "$ROOT_DIR/VISION.md" ||
+  ! grep -Fq 'Consolidated duplicate `viewWillAppear` overrides' "$ROOT_DIR/CHANGES.md" ||
+  ! grep -Fq 'one `viewWillAppear` override' "$ROOT_DIR/AGENTS.md"; then
+  printf '%s\n' "View appearance lifecycle documentation must remain synchronized." >&2
   exit 1
 fi
 
