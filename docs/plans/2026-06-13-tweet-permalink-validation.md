@@ -1,7 +1,7 @@
 ---
 title: Tweet Permalink Validation
 type: security
-status: in_progress
+status: completed
 date: 2026-06-13
 ---
 
@@ -71,3 +71,22 @@ Files: `README.md`, `SECURITY.md`, `VISION.md`, `CHANGES.md`
 - Run shell syntax, plist parsing, `git diff --check`, and intended-file secret
   scans.
 - Take one bounded exact-head macOS and CodeQL snapshot after push; do not poll.
+
+## Verification
+
+- A copied Linux baseline passed with local `xcodebuild` explicitly unavailable.
+- Replacing the HTTPS requirement produced the expected `scheme mutation failed` result.
+- Removing username/password rejection produced the expected `userinfo mutation failed` result.
+- Loading `tweet.permalink` directly produced the expected `guard bypass mutation failed` result.
+- The rooted full gate, shell syntax, plist parsing, diff check, and intended-file
+  secret scan passed.
+- The exact pushed head still requires the bounded hosted macOS check and CodeQL
+  snapshot because Swift compilation and TwitterKit navigation cannot run here.
+
+## Work Completed
+
+- Added an optional permalink validator requiring HTTPS, a hostname, and no
+  username/password userinfo.
+- Guarded tweet selection before web-view, request, or navigation creation.
+- Added exact source and ordering contracts plus generic rejection logging.
+- Updated project security, privacy, maintenance, and change guidance.

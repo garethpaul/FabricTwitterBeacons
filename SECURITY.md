@@ -54,6 +54,9 @@ Loaded TwitterKit tweet responses should be type-checked before updating the
 visible table so malformed response objects do not crash the beacon-triggered
 display path or duplicate stale rows.
 
+Selected tweet permalinks should require credential-free HTTPS URLs with a
+hostname before any in-app web request or navigation is created.
+
 Beacon-triggered Twitter callbacks should recheck visible-screen and immediate
 proximity context before authentication continues or loaded tweets become
 visible.

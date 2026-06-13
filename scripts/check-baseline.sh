@@ -16,6 +16,7 @@ BEACON_AUTHORIZATION_PLAN="$ROOT_DIR/docs/plans/2026-06-10-beacon-authorization-
 CI_PLAN="$ROOT_DIR/docs/plans/2026-06-10-ci-baseline.md"
 STALE_TWEET_PLAN="$ROOT_DIR/docs/plans/2026-06-12-stale-beacon-tweet-results.md"
 ROOT_INDEPENDENT_MAKE_PLAN="$ROOT_DIR/docs/plans/2026-06-12-root-independent-makefile.md"
+TWEET_PERMALINK_PLAN="$ROOT_DIR/docs/plans/2026-06-13-tweet-permalink-validation.md"
 CI_WORKFLOW="$ROOT_DIR/.github/workflows/check.yml"
 MAKEFILE="$ROOT_DIR/Makefile"
 
@@ -53,6 +54,7 @@ for path in \
   "docs/plans/2026-06-10-ci-baseline.md" \
   "docs/plans/2026-06-12-stale-beacon-tweet-results.md" \
   "docs/plans/2026-06-12-root-independent-makefile.md" \
+  "docs/plans/2026-06-13-tweet-permalink-validation.md" \
   "docs/plans/2026-06-09-twitter-log-boundary.md" \
   "docs/plans/2026-06-08-twitter-search-result-limit.md" \
   "docs/plans/2026-06-08-fabric-twitter-beacons-maintenance-baseline.md"; do
@@ -228,6 +230,38 @@ if ! grep -Fq "if let loadedTweetObjects = twttrs" "$ROOT_DIR/settee/ViewControl
   exit 1
 fi
 
+for permalink_contract in \
+  "func validatedTweetPermalink(url: NSURL?) -> NSURL?" \
+  'candidate.scheme?.lowercaseString == "https"' \
+  "candidate.user == nil" \
+  "candidate.password == nil" \
+  "if let host = candidate.host" \
+  "if !host.isEmpty" \
+  "validatedTweetPermalink(tweet?.permalink)" \
+  'println("Tweet permalink was rejected")'; do
+  if ! grep -Fq "$permalink_contract" "$ROOT_DIR/settee/ViewController.swift"; then
+    printf '%s\n' "Tweet permalink validation contract is missing: $permalink_contract" >&2
+    exit 1
+  fi
+done
+
+python3 - "$ROOT_DIR/settee/ViewController.swift" <<'PY'
+import pathlib
+import sys
+
+source = pathlib.Path(sys.argv[1]).read_text()
+selection = source.find("func tweetView(tweetView: TWTRTweetView!, didSelectTweet tweet: TWTRTweet!)")
+validation = source.find("validatedTweetPermalink(tweet?.permalink)", selection)
+web_view = source.find("let webView = UIWebView", selection)
+request_load = source.find("webView.loadRequest(NSURLRequest(URL: permalink))", selection)
+push = source.find("pushViewController", selection)
+
+if -1 in (selection, validation, web_view, request_load, push) or not (
+    selection < validation < web_view < request_load < push
+):
+    raise SystemExit("Tweet permalink validation must precede request and web-view navigation")
+PY
+
 if ! grep -Fq "make check" "$ROOT_DIR/README.md" ||
   ! grep -Fq "GitHub Actions" "$ROOT_DIR/README.md" ||
   ! grep -Fq "FABRIC_API_KEY" "$ROOT_DIR/README.md" ||
@@ -366,6 +400,23 @@ fi
 if ! grep -Fq "xcodebuild -list" "$CI_PLAN" ||
   ! grep -Fq "disabled checkout credential persistence" "$CI_PLAN"; then
   printf '%s\n' "CI baseline plan must record hosted Xcode parsing and credential hardening." >&2
+  exit 1
+fi
+
+if ! grep -Fq "status: completed" "$TWEET_PERMALINK_PLAN" ||
+  ! grep -Fq "scheme mutation failed" "$TWEET_PERMALINK_PLAN" ||
+  ! grep -Fq "userinfo mutation failed" "$TWEET_PERMALINK_PLAN" ||
+  ! grep -Fq "guard bypass mutation failed" "$TWEET_PERMALINK_PLAN" ||
+  ! grep -Fq "hosted macOS check" "$TWEET_PERMALINK_PLAN"; then
+  printf '%s\n' "Tweet permalink plan must record completed local verification." >&2
+  exit 1
+fi
+
+if ! grep -Fq "credential-free HTTPS" "$ROOT_DIR/README.md" ||
+  ! grep -Fq "credential-free HTTPS URLs" "$ROOT_DIR/SECURITY.md" ||
+  ! grep -Fq "credential-free HTTPS permalinks" "$ROOT_DIR/VISION.md" ||
+  ! grep -Fq "Validated selected tweet permalinks" "$ROOT_DIR/CHANGES.md"; then
+  printf '%s\n' "Project guidance must document tweet permalink validation." >&2
   exit 1
 fi
 

@@ -1,5 +1,10 @@
 # Changes
 
+## 2026-06-13
+
+- Validated selected tweet permalinks as credential-free HTTPS URLs with a host
+  before creating an in-app web request.
+
 ## 2026-06-12
 
 - Made the Makefile verification entry point independent of the caller's

@@ -73,6 +73,8 @@ project can be listed when `xcodebuild` is installed.
 Loaded TwitterKit tweet objects are type-checked before replacing the visible
 table contents, so unexpected response objects do not crash the table or append
 duplicate stale rows.
+Selected tweet permalinks are opened only when they are credential-free HTTPS
+URLs with a hostname; rejected link details are not logged.
 Guest login and tweet-load callbacks recheck that the beacon screen is visible
 and the user remains immediately close before starting or displaying results,
 so stale asynchronous responses cannot repopulate the table after context ends.
@@ -136,6 +138,8 @@ When the required SDK or runtime is unavailable, use static checks and source re
   baseline.
 - See `docs/plans/2026-06-12-root-independent-makefile.md` for the portable
   Makefile verification contract.
+- See `docs/plans/2026-06-13-tweet-permalink-validation.md` for the in-app tweet
+  navigation boundary.
 
 ## Contributing
 
