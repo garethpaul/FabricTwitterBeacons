@@ -168,21 +168,43 @@ class ViewController: UITableViewController, CLLocationManagerDelegate, TWTRTwee
         }
     }
 
-    func loadTweets(tweetIDs: [String], contextGeneration: Int) {
-        if tweetIDs.isEmpty {
-            return
-        }
-
+    func requestTweetsForContext(contextGeneration: Int) {
         if !self.hasActiveBeaconTweetContext(contextGeneration) {
             return
         }
 
-        // Do not trigger another request for the same beacon context.
         if self.loadingTweetContextGeneration == contextGeneration {
             return
         }
 
         self.loadingTweetContextGeneration = contextGeneration
+        Search() { (result: [String]) in
+            dispatch_async(dispatch_get_main_queue()) {
+                if !self.hasActiveBeaconTweetContext(contextGeneration) {
+                    self.finishLoadingTweets(contextGeneration)
+                    return
+                }
+
+                if result.isEmpty {
+                    self.finishLoadingTweets(contextGeneration)
+                    return
+                }
+
+                self.loadTweets(result, contextGeneration: contextGeneration)
+            }
+        }
+    }
+
+    func loadTweets(tweetIDs: [String], contextGeneration: Int) {
+        if tweetIDs.isEmpty {
+            self.finishLoadingTweets(contextGeneration)
+            return
+        }
+
+        if !self.hasActiveBeaconTweetContext(contextGeneration) {
+            self.finishLoadingTweets(contextGeneration)
+            return
+        }
 
         // load tweets with guest login
         Twitter.sharedInstance().logInGuestWithCompletion { (session: TWTRGuestSession!, error: NSError!) in
@@ -278,17 +300,8 @@ class ViewController: UITableViewController, CLLocationManagerDelegate, TWTRTwee
                     // Register the identifier for TWTRTweetTableViewCell.
                     self.tableView.registerClass(TWTRTweetTableViewCell.self, forCellReuseIdentifier: tweetTableCellReuseIdentifier)
 
-                    // Send a request to the Search API. Check out TVSearchAPI.swift for details..
-                    Search() { (result: [String]) in
-                        dispatch_async(dispatch_get_main_queue()) {
-                            if !self.hasActiveBeaconTweetContext(contextGeneration) {
-                                return
-                            }
-
-                            // Load the array back to display the Tweets
-                            self.loadTweets(result, contextGeneration: contextGeneration)
-                        }
-                    }
+                    // Reserve this beacon context before starting the Twitter search.
+                    self.requestTweetsForContext(contextGeneration)
 
 
                 }
@@ -322,15 +335,7 @@ class ViewController: UITableViewController, CLLocationManagerDelegate, TWTRTwee
         }
 
         // Trigger a load for the most recent Tweets.
-        Search() { (result: [String]) in
-            dispatch_async(dispatch_get_main_queue()) {
-                if !self.hasActiveBeaconTweetContext(contextGeneration) {
-                    return
-                }
-
-                self.loadTweets(result, contextGeneration: contextGeneration)
-            }
-        }
+        self.requestTweetsForContext(contextGeneration)
     }
 
     // MARK: TWTRTweetViewDelegate

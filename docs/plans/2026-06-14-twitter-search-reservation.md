@@ -2,7 +2,7 @@
 title: Twitter Search Reservation
 type: reliability
 date: 2026-06-14
-status: in-progress
+status: completed
 execution: code
 ---
 
@@ -40,4 +40,15 @@ same active context.
 
 ## Verification
 
-- Pending implementation and bounded validation.
+- The focused static baseline passed search ownership, main-queue, lifecycle,
+  stale-context, and parse-boundary contracts before stopping only at the
+  pending completed-plan assertion.
+- Six in-memory hostile mutations were rejected for reservation ordering,
+  same-generation suppression, stale and empty-result release, and either
+  ranging or refresh bypassing the shared helper.
+- Full `make check`, `make lint`, `make test`, and `make build` pass from the
+  repository, and `make check` passes from `/tmp` through the absolute Makefile
+  path; local Xcode/device behavior is not claimed on Linux.
+- Exact intended-path, generated-artifact, whitespace, conflict-marker,
+  protected-file, and changed-line credential-pattern audits pass before
+  delivery.

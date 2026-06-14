@@ -2,6 +2,8 @@
 
 ## 2026-06-14
 
+- Reserved active beacon generations before Twitter search dispatch to prevent
+  duplicate search chains from repeated ranging or refresh events.
 - Required HTTP 200 and at most 1 MiB of response data before Twitter search
   JSON parsing.
 - Clear stale published tweets and restore waiting UI when close-beacon context

@@ -42,6 +42,8 @@ Current baseline:
   helper response body.
 - Beacon-triggered tweet loading skips empty search results and prevents
   overlapping guest tweet-load requests.
+- Active beacon generations are reserved before Twitter search dispatch so repeated
+  ranging or refresh events cannot launch duplicate Twitter request chains.
 - Pending guest login and tweet-load callbacks are discarded when the beacon
   screen is hidden or immediate proximity ends.
 - Queued hidden-screen ranging callbacks return before search begins.

@@ -117,6 +117,8 @@ When the required SDK or runtime is unavailable, use static checks and source re
   response details from beacon-triggered flows.
 - Beacon-triggered tweet loading skips empty search results and suppresses
   overlapping guest tweet-load requests.
+- The active beacon generation is reserved before Twitter search dispatch, so
+  repeated ranging or refresh events cannot start duplicate search chains.
 - Beacon-triggered authentication and loaded results are discarded if the
   screen is hidden or immediate proximity ends while callbacks are pending.
 - Loaded TwitterKit tweet responses are type-checked before replacing the
