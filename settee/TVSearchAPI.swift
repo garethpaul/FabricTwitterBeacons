@@ -10,6 +10,24 @@
 import Foundation
 import TwitterKit
 
+let TwitterSearchResponseMaxBytes = 1024 * 1024
+
+func acceptsTwitterSearchResponse(response: NSURLResponse?, data: NSData?) -> Bool {
+    if let httpResponse = response as? NSHTTPURLResponse {
+        if httpResponse.statusCode != 200 {
+            return false
+        }
+    } else {
+        return false
+    }
+
+    if let responseData = data {
+        return responseData.length <= TwitterSearchResponseMaxBytes
+    }
+
+    return false
+}
+
 func Search(completion: (result: [String]) -> Void) {
 
     // setup some type aliases to handle regular wording for JSON type objects
@@ -46,14 +64,14 @@ func Search(completion: (result: [String]) -> Void) {
                     (response, data, connectionError) -> Void in
                     if (connectionError == nil) {
 
-                        // Setup a tweet array to contain all of those juicy tweets
-                        var tweetArray = Array<String>()
-
-                        if data == nil {
-                            println("Twitter search response missing data")
+                        if !acceptsTwitterSearchResponse(response, data: data) {
+                            println("Twitter search response was rejected")
                             completion(result: [])
                             return
                         }
+
+                        // Setup a tweet array to contain all of those juicy tweets
+                        var tweetArray = Array<String>()
 
                         var jsonError : NSError?
                         let json : AnyObject? =

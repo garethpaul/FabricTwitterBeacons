@@ -24,6 +24,8 @@ HIDDEN_RANGING_PLAN="$ROOT_DIR/docs/plans/2026-06-13-hidden-ranging-callback-gua
 BEACON_CONTEXT_GENERATION_PLAN="$ROOT_DIR/docs/plans/2026-06-14-beacon-context-generation.md"
 STALE_PRESENTATION_PLAN="$ROOT_DIR/docs/plans/2026-06-14-stale-beacon-presentation-reset.md"
 STALE_PRESENTATION_CHECK="$ROOT_DIR/scripts/check-stale-beacon-presentation-reset.py"
+TWITTER_SEARCH_PARSE_BOUNDARY_PLAN="$ROOT_DIR/docs/plans/2026-06-14-twitter-search-parse-boundary.md"
+TWITTER_SEARCH_PARSE_BOUNDARY_CHECK="$ROOT_DIR/scripts/check-twitter-search-parse-boundary.py"
 DEVICE_VERIFICATION="$ROOT_DIR/docs/manual-beacon-twitter-verification.md"
 CI_WORKFLOW="$ROOT_DIR/.github/workflows/check.yml"
 MAKEFILE="$ROOT_DIR/Makefile"
@@ -71,6 +73,8 @@ for path in \
   "docs/plans/2026-06-14-beacon-context-generation.md" \
   "docs/plans/2026-06-14-stale-beacon-presentation-reset.md" \
   "scripts/check-stale-beacon-presentation-reset.py" \
+  "docs/plans/2026-06-14-twitter-search-parse-boundary.md" \
+  "scripts/check-twitter-search-parse-boundary.py" \
   "docs/plans/2026-06-09-twitter-log-boundary.md" \
   "docs/plans/2026-06-08-twitter-search-result-limit.md" \
   "docs/plans/2026-06-08-fabric-twitter-beacons-maintenance-baseline.md"; do
@@ -78,6 +82,25 @@ for path in \
 done
 
 python3 "$STALE_PRESENTATION_CHECK" "$ROOT_DIR/settee/ViewController.swift"
+python3 "$TWITTER_SEARCH_PARSE_BOUNDARY_CHECK" \
+  "$ROOT_DIR/settee/TVSearchAPI.swift" \
+  "$TWITTER_SEARCH_PARSE_BOUNDARY_PLAN"
+
+if ! grep -Fq "status: completed" "$TWITTER_SEARCH_PARSE_BOUNDARY_PLAN" ||
+  ! grep -Fq "hostile mutations were rejected" "$TWITTER_SEARCH_PARSE_BOUNDARY_PLAN" ||
+  ! grep -Fq "make check" "$TWITTER_SEARCH_PARSE_BOUNDARY_PLAN"; then
+  printf '%s\n' "Twitter search parse boundary plan must record completed verification." >&2
+  exit 1
+fi
+
+if ! grep -Fq "HTTP 200 and at most 1 MiB" "$ROOT_DIR/README.md" ||
+  ! grep -Fq "HTTP 200 and at most 1 MiB" "$ROOT_DIR/SECURITY.md" ||
+  ! grep -Fq "HTTP 200 and at most 1 MiB" "$ROOT_DIR/VISION.md" ||
+  ! grep -Fq "HTTP 200 and at most 1 MiB" "$ROOT_DIR/CHANGES.md" ||
+  ! grep -Fq "HTTP 200 and at most 1 MiB" "$ROOT_DIR/AGENTS.md"; then
+  printf '%s\n' "Project guidance must preserve the Twitter search parse boundary." >&2
+  exit 1
+fi
 
 python3 - "$ROOT_DIR/settee/ViewController.swift" <<'PY'
 import sys

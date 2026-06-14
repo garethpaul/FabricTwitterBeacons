@@ -123,6 +123,8 @@ When the required SDK or runtime is unavailable, use static checks and source re
   visible table contents.
 - Malformed Twitter search JSON completes with an empty result instead of
   force-unwrapping the response body.
+- Twitter search JSON parsing requires HTTP 200 and at most 1 MiB of response
+  data; rejected responses complete with an empty result.
 - Twitter search transport failures complete with empty results so
   beacon-triggered callers can skip tweet loading consistently.
 - Malformed Twitter REST JSON in the legacy REST helper fails closed instead of

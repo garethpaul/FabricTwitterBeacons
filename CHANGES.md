@@ -2,6 +2,8 @@
 
 ## 2026-06-14
 
+- Required HTTP 200 and at most 1 MiB of response data before Twitter search
+  JSON parsing.
 - Clear stale published tweets and restore waiting UI when close-beacon context
   is lost, without rerunning full controller setup.
 - Added a beacon generation token for search, login, load, and in-flight request

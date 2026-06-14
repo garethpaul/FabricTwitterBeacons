@@ -54,7 +54,7 @@
 - Keep visible-use beacon ranging and navigation-logo animation in one `viewWillAppear` override.
 - Treat iBeacon UUIDs and proximity behavior as sensitive physical-device configuration. Do not log beacon payloads or user proximity transitions without a reviewed need.
 - Do not log Twitter usernames, tweet IDs, raw API errors, or account-specific response details from beacon-triggered flows.
-- Beacon-triggered tweet loading must limit result IDs, skip empty searches, suppress overlapping guest loads, complete failures with empty results, fail closed on malformed JSON, and type-check loaded TwitterKit objects before replacing visible rows.
+- Beacon-triggered tweet loading must limit result IDs, skip empty searches, suppress overlapping guest loads, complete failures with empty results, require HTTP 200 and at most 1 MiB before search JSON parsing, fail closed on malformed JSON, and type-check loaded TwitterKit objects before replacing visible rows.
 - Preserve the beacon generation token through search, login, load, and in-flight ownership so prior leave-and-return callbacks fail closed.
 - Clear already-published tweets and restore the existing waiting UI when the
   active close-beacon context is lost; ranging callbacks must not rerun full

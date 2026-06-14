@@ -49,6 +49,8 @@ The beacon controller should keep visible-use ranging and logo animation in one
 
 Twitter search and legacy REST JSON parsing should fail closed without
 force-unwrapping malformed response bodies or logging account-specific details.
+Twitter search JSON parsing additionally requires HTTP 200 and at most 1 MiB of
+response data before the parser is invoked.
 
 Twitter search transport failures should complete with empty results so
 beacon-triggered tweet loading does not wait on a failed request path.

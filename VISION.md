@@ -34,6 +34,8 @@ Current baseline:
 - Twitter diagnostics avoid usernames, tweet IDs, and raw client error details.
 - Malformed Twitter search JSON completes with an empty result instead of
   force-unwrapping the response body.
+- Twitter search JSON parsing requires HTTP 200 and at most 1 MiB of response
+  data before parsing begins.
 - Twitter search transport failures complete with empty results so
   beacon-triggered callers can skip tweet loading consistently.
 - Malformed Twitter REST JSON fails closed without force-unwrapping the legacy
