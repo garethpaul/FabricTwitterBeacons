@@ -2,6 +2,8 @@
 
 ## 2026-06-14
 
+- Clear stale published tweets and restore waiting UI when close-beacon context
+  is lost, without rerunning full controller setup.
 - Added a beacon generation token for search, login, load, and in-flight request
   ownership across leave-and-return cycles.
 

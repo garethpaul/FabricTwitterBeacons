@@ -22,6 +22,8 @@ TWITTER_MAIN_QUEUE_PLAN="$ROOT_DIR/docs/plans/2026-06-13-twitter-main-queue-publ
 VIEW_APPEARANCE_PLAN="$ROOT_DIR/docs/plans/2026-06-13-view-appearance-lifecycle-consolidation.md"
 HIDDEN_RANGING_PLAN="$ROOT_DIR/docs/plans/2026-06-13-hidden-ranging-callback-guard.md"
 BEACON_CONTEXT_GENERATION_PLAN="$ROOT_DIR/docs/plans/2026-06-14-beacon-context-generation.md"
+STALE_PRESENTATION_PLAN="$ROOT_DIR/docs/plans/2026-06-14-stale-beacon-presentation-reset.md"
+STALE_PRESENTATION_CHECK="$ROOT_DIR/scripts/check-stale-beacon-presentation-reset.py"
 DEVICE_VERIFICATION="$ROOT_DIR/docs/manual-beacon-twitter-verification.md"
 CI_WORKFLOW="$ROOT_DIR/.github/workflows/check.yml"
 MAKEFILE="$ROOT_DIR/Makefile"
@@ -67,11 +69,15 @@ for path in \
   "docs/plans/2026-06-13-view-appearance-lifecycle-consolidation.md" \
   "docs/plans/2026-06-13-hidden-ranging-callback-guard.md" \
   "docs/plans/2026-06-14-beacon-context-generation.md" \
+  "docs/plans/2026-06-14-stale-beacon-presentation-reset.md" \
+  "scripts/check-stale-beacon-presentation-reset.py" \
   "docs/plans/2026-06-09-twitter-log-boundary.md" \
   "docs/plans/2026-06-08-twitter-search-result-limit.md" \
   "docs/plans/2026-06-08-fabric-twitter-beacons-maintenance-baseline.md"; do
   require_file "$path"
 done
+
+python3 "$STALE_PRESENTATION_CHECK" "$ROOT_DIR/settee/ViewController.swift"
 
 python3 - "$ROOT_DIR/settee/ViewController.swift" <<'PY'
 import sys
@@ -310,13 +316,14 @@ refresh = source[range_end:refresh_end]
 
 required_ranging = (
     "if beacons == nil",
-    "invalidateBeaconTweetContext()",
+    "resetBeaconTweetPresentation()",
     "if previousProximity == 1 && proximity != 1",
+    "resetBeaconTweetPresentation()",
     "let contextGeneration = beaconTweetContextGeneration",
     "if !self.hasActiveBeaconTweetContext(contextGeneration)",
     "self.loadTweets(result, contextGeneration: contextGeneration)",
     "} else if prev == 1 {",
-    "invalidateBeaconTweetContext()",
+    "resetBeaconTweetPresentation()",
 )
 positions = []
 start = 0
@@ -325,7 +332,7 @@ for item in required_ranging:
     positions.append(position)
     start = position + len(item) if position != -1 else start
 if -1 in positions:
-    raise SystemExit("Ranging must invalidate, capture, and propagate beacon context generations in order")
+    raise SystemExit("Ranging must reset presentation, capture, and propagate beacon context generations in order")
 
 required_refresh = (
     "let contextGeneration = beaconTweetContextGeneration",
@@ -349,15 +356,17 @@ authorization = source[authorization_start:authorization_end]
 authorization_contract = (
     "} else {",
     "if prev == 1",
-    "invalidateBeaconTweetContext()",
+    "resetBeaconTweetPresentation()",
     "manager.stopRangingBeaconsInRegion(region)",
 )
 positions = [authorization.find(item) for item in authorization_contract]
 if -1 in positions or positions != sorted(positions):
     raise SystemExit("Authorization loss must invalidate close beacon context before ranging stops")
 
-if source.count("invalidateBeaconTweetContext()") != 6:
-    raise SystemExit("Beacon context must be invalidated on hide, authorization loss, nil, proximity loss, and unknown-only ranging")
+if source.count("invalidateBeaconTweetContext()") != 3 or source.count(
+    "resetBeaconTweetPresentation()"
+) != 5:
+    raise SystemExit("Beacon context must invalidate on hide and reset presentation on all four active-context loss paths")
 if source.count("dispatch_async(dispatch_get_main_queue())") != 4 or load.count(
     "dispatch_async(dispatch_get_main_queue())"
 ) != 2 or load.count("self.tweets = loadedTweets") != 1:
@@ -605,6 +614,14 @@ if ! grep -Fq "status: completed" "$BEACON_CONTEXT_GENERATION_PLAN" ||
   ! grep -Fq "make check" "$BEACON_CONTEXT_GENERATION_PLAN" ||
   ! grep -Fq "hostile mutations were rejected" "$BEACON_CONTEXT_GENERATION_PLAN"; then
   printf '%s\n' "Beacon context generation plan must record completed verification." >&2
+  exit 1
+fi
+
+if ! grep -Fq "status: completed" "$STALE_PRESENTATION_PLAN" ||
+  ! grep -Fq "make check" "$STALE_PRESENTATION_PLAN" ||
+  ! grep -Fq "hostile source mutations were rejected" "$STALE_PRESENTATION_PLAN" ||
+  ! grep -Fq "No Fabric/Twitter credentials" "$STALE_PRESENTATION_PLAN"; then
+  printf '%s\n' "Stale beacon presentation plan must record truthful completed verification." >&2
   exit 1
 fi
 

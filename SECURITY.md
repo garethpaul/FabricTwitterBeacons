@@ -66,6 +66,8 @@ visible.
 
 Each close-range session should carry a beacon generation token through search,
 login, and load callbacks so an older leave-and-return cycle cannot publish.
+Published tweets are cleared when the close-beacon context is lost so stale
+account-derived content does not remain visible outside its ranging context.
 
 Hidden-screen ranging callbacks must not start Twitter search after ranging is
 stopped for view disappearance.

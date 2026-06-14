@@ -133,7 +133,7 @@ class ViewController: UITableViewController, CLLocationManagerDelegate, TWTRTwee
             manager.startRangingBeaconsInRegion(region)
         } else {
             if prev == 1 {
-                invalidateBeaconTweetContext()
+                resetBeaconTweetPresentation()
             }
             manager.stopRangingBeaconsInRegion(region)
         }
@@ -142,6 +142,20 @@ class ViewController: UITableViewController, CLLocationManagerDelegate, TWTRTwee
     func invalidateBeaconTweetContext() {
         beaconTweetContextGeneration += 1
         prev = nil
+    }
+
+    func resetBeaconTweetPresentation() {
+        invalidateBeaconTweetContext()
+        self.tweets = []
+
+        if label.superview == nil {
+            self.view.addSubview(label)
+        }
+
+        if activityIndicator.superview == nil {
+            activityIndicator.startAnimating()
+            self.view.addSubview(activityIndicator)
+        }
     }
 
     func hasActiveBeaconTweetContext(contextGeneration: Int) -> Bool {
@@ -232,7 +246,7 @@ class ViewController: UITableViewController, CLLocationManagerDelegate, TWTRTwee
 
         if beacons == nil {
             if prev == 1 {
-                invalidateBeaconTweetContext()
+                resetBeaconTweetPresentation()
             }
             return
         }
@@ -249,7 +263,7 @@ class ViewController: UITableViewController, CLLocationManagerDelegate, TWTRTwee
                 let previousProximity = prev
 
                 if previousProximity == 1 && proximity != 1 {
-                    invalidateBeaconTweetContext()
+                    resetBeaconTweetPresentation()
                 }
 
                 prev = proximity
@@ -279,27 +293,6 @@ class ViewController: UITableViewController, CLLocationManagerDelegate, TWTRTwee
 
                 }
 
-                // If the proximity is further away.
-                else if proximity == 2 {
-
-                    // If the previous value was 1 aka close then we need to start again remove the tweets and wait for the 
-                    // user to come back in range.
-                    if previousProximity == 1 {
-
-                        // remove the Label from View
-                        label.removeFromSuperview()
-
-                        // remove the activityIndication from the View
-                        activityIndicator.removeFromSuperview()
-
-                        // Lets set an empty array for the tweets
-                        self.tweets = []
-
-                        // Get going and setup the View Again
-                        setupView()
-                    }
-                }
-
             }
 
 
@@ -317,7 +310,7 @@ class ViewController: UITableViewController, CLLocationManagerDelegate, TWTRTwee
 
             }
         } else if prev == 1 {
-            invalidateBeaconTweetContext()
+            resetBeaconTweetPresentation()
         }
     }
 

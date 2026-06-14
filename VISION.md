@@ -49,6 +49,8 @@ Current baseline:
   state on the main queue after the applicable stale beacon-context check.
 - A beacon generation token scopes search and tweet-load callbacks to one
   close-range session across leave-and-return transitions.
+- Published tweets are cleared and the existing waiting presentation is
+  restored when that close-beacon context is lost.
 - One `viewWillAppear` override owns visible-use ranging and logo animation.
 - Tweet selection validates credential-free HTTPS permalinks with a hostname
   before in-app navigation.
