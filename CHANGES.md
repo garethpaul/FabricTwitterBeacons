@@ -1,5 +1,10 @@
 # Changes
 
+## 2026-06-14
+
+- Added a beacon generation token for search, login, load, and in-flight request
+  ownership across leave-and-return cycles.
+
 ## 2026-06-13
 
 - Ignored queued ranging callbacks after the beacon screen hides so they cannot

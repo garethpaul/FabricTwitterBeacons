@@ -21,6 +21,7 @@ DEVICE_VERIFICATION_PLAN="$ROOT_DIR/docs/plans/2026-06-13-device-beacon-twitter-
 TWITTER_MAIN_QUEUE_PLAN="$ROOT_DIR/docs/plans/2026-06-13-twitter-main-queue-publication.md"
 VIEW_APPEARANCE_PLAN="$ROOT_DIR/docs/plans/2026-06-13-view-appearance-lifecycle-consolidation.md"
 HIDDEN_RANGING_PLAN="$ROOT_DIR/docs/plans/2026-06-13-hidden-ranging-callback-guard.md"
+BEACON_CONTEXT_GENERATION_PLAN="$ROOT_DIR/docs/plans/2026-06-14-beacon-context-generation.md"
 DEVICE_VERIFICATION="$ROOT_DIR/docs/manual-beacon-twitter-verification.md"
 CI_WORKFLOW="$ROOT_DIR/.github/workflows/check.yml"
 MAKEFILE="$ROOT_DIR/Makefile"
@@ -65,6 +66,7 @@ for path in \
   "docs/plans/2026-06-13-twitter-main-queue-publication.md" \
   "docs/plans/2026-06-13-view-appearance-lifecycle-consolidation.md" \
   "docs/plans/2026-06-13-hidden-ranging-callback-guard.md" \
+  "docs/plans/2026-06-14-beacon-context-generation.md" \
   "docs/plans/2026-06-09-twitter-log-boundary.md" \
   "docs/plans/2026-06-08-twitter-search-result-limit.md" \
   "docs/plans/2026-06-08-fabric-twitter-beacons-maintenance-baseline.md"; do
@@ -246,15 +248,14 @@ if ! grep -Fq "lint: check" "$ROOT_DIR/Makefile" ||
   exit 1
 fi
 
-loading_reset_count=$(grep -F "self.isLoadingTweets = false" "$ROOT_DIR/settee/ViewController.swift" | wc -l | tr -d ' ')
-active_context_count=$(grep -F "if !self.hasActiveBeaconTweetContext()" "$ROOT_DIR/settee/ViewController.swift" | wc -l | tr -d ' ')
 if ! grep -Fq "if tweetIDs.isEmpty" "$ROOT_DIR/settee/ViewController.swift" ||
-  ! grep -Fq "func hasActiveBeaconTweetContext() -> Bool" "$ROOT_DIR/settee/ViewController.swift" ||
-  ! grep -Fq "return isBeaconScreenVisible && prev == 1" "$ROOT_DIR/settee/ViewController.swift" ||
-  [ "$active_context_count" -ne 3 ] ||
-  ! grep -Fq "self.isLoadingTweets = true" "$ROOT_DIR/settee/ViewController.swift" ||
-  [ "$loading_reset_count" -lt 2 ]; then
-  printf '%s\n' "Tweet loading must skip empty IDs, mark in-flight requests, and clear the loading flag on failure/completion." >&2
+  ! grep -Fq "var loadingTweetContextGeneration: Int?" "$ROOT_DIR/settee/ViewController.swift" ||
+  ! grep -Fq "var beaconTweetContextGeneration = 0" "$ROOT_DIR/settee/ViewController.swift" ||
+  ! grep -Fq "beaconTweetContextGeneration += 1" "$ROOT_DIR/settee/ViewController.swift" ||
+  ! grep -Fq "func hasActiveBeaconTweetContext(contextGeneration: Int) -> Bool" "$ROOT_DIR/settee/ViewController.swift" ||
+  ! grep -Fq "contextGeneration == beaconTweetContextGeneration" "$ROOT_DIR/settee/ViewController.swift" ||
+  ! grep -Fq "func finishLoadingTweets(contextGeneration: Int)" "$ROOT_DIR/settee/ViewController.swift"; then
+  printf '%s\n' "Tweet loading must bind active context and in-flight ownership to one generation." >&2
   exit 1
 fi
 
@@ -263,84 +264,111 @@ import sys
 from pathlib import Path
 
 source = Path(sys.argv[1]).read_text(encoding="utf-8")
-checks = []
-start = 0
-needle = "if !self.hasActiveBeaconTweetContext()"
-while True:
-    position = source.find(needle, start)
-    if position == -1:
-        break
-    checks.append(position)
-    start = position + len(needle)
+finish_start = source.find("func finishLoadingTweets(contextGeneration: Int)")
+finish_end = source.find("func loadTweets", finish_start)
+finish = source[finish_start:finish_end]
+finish_contract = (
+    "if loadingTweetContextGeneration == contextGeneration",
+    "loadingTweetContextGeneration = nil",
+)
+positions = [finish.find(item) for item in finish_contract]
+if -1 in positions or positions != sorted(positions):
+    raise SystemExit("Only the matching generation may clear in-flight tweet ownership")
 
-loading_started = source.find("self.isLoadingTweets = true")
-tweet_request = source.find("loadTweetsWithIDs(tweetIDs)")
-loading_reset = source.find("self.isLoadingTweets = false", tweet_request)
-tweet_assignment = source.find("self.tweets = loadedTweets")
-
-if len(checks) != 3 or not (
-    checks[0] < loading_started < checks[1] < tweet_request < loading_reset < checks[2] < tweet_assignment
-):
-    print("Tweet loading must recheck active beacon context before login, request, and result assignment.", file=sys.stderr)
-    raise SystemExit(1)
-PY
-
-python3 - "$ROOT_DIR/settee/ViewController.swift" <<'PY'
-import pathlib
-import sys
-
-source = pathlib.Path(sys.argv[1]).read_text()
-load_start = source.find("func loadTweets(tweetIDs: [String])")
+load_start = source.find("func loadTweets(tweetIDs: [String], contextGeneration: Int)")
 load_end = source.find("override func didReceiveMemoryWarning()", load_start)
 load = source[load_start:load_end]
 
-search_callback = source.find("Search() { (result: [String]) in")
-search_dispatch = source.find(
-    "dispatch_async(dispatch_get_main_queue())", search_callback
+required_load = (
+    "if !self.hasActiveBeaconTweetContext(contextGeneration)",
+    "if self.loadingTweetContextGeneration == contextGeneration",
+    "self.loadingTweetContextGeneration = contextGeneration",
+    "logInGuestWithCompletion",
+    "if session == nil",
+    "self.finishLoadingTweets(contextGeneration)",
+    "if !self.hasActiveBeaconTweetContext(contextGeneration)",
+    "loadTweetsWithIDs(tweetIDs)",
+    "dispatch_async(dispatch_get_main_queue())",
+    "self.finishLoadingTweets(contextGeneration)",
+    "if !self.hasActiveBeaconTweetContext(contextGeneration)",
+    "self.tweets = loadedTweets",
 )
-load_invocation = source.find("self.loadTweets(result)", search_dispatch)
+positions = []
+start = 0
+for item in required_load:
+    position = load.find(item, start)
+    positions.append(position)
+    start = position + len(item) if position != -1 else start
+if -1 in positions:
+    raise SystemExit("Twitter loading must retain generation ownership through login, request, and publication")
 
-guest_callback = load.find("logInGuestWithCompletion")
-guest_dispatch = load.find("dispatch_async(dispatch_get_main_queue())", guest_callback)
-session_failure = load.find("if session == nil", guest_dispatch)
-tweet_request = load.find("loadTweetsWithIDs(tweetIDs)", session_failure)
-result_dispatch = load.find("dispatch_async(dispatch_get_main_queue())", tweet_request)
-loading_reset = load.find("self.isLoadingTweets = false", result_dispatch)
-stale_check = load.find("if !self.hasActiveBeaconTweetContext()", loading_reset)
-tweet_assignment = load.find("self.tweets = loadedTweets", stale_check)
+range_start = source.find("func locationManager(manager: CLLocationManager!, didRangeBeacons")
+range_end = source.find("func refreshInvoked()", range_start)
+ranging = source[range_start:range_end]
+refresh_end = source.find("// MARK: TWTRTweetViewDelegate", range_end)
+refresh = source[range_end:refresh_end]
 
-positions = (
-    search_callback,
-    search_dispatch,
-    load_invocation,
-    load_start,
-    load_end,
-    guest_callback,
-    guest_dispatch,
-    session_failure,
-    tweet_request,
-    result_dispatch,
-    loading_reset,
-    stale_check,
-    tweet_assignment,
+required_ranging = (
+    "if beacons == nil",
+    "invalidateBeaconTweetContext()",
+    "if previousProximity == 1 && proximity != 1",
+    "let contextGeneration = beaconTweetContextGeneration",
+    "if !self.hasActiveBeaconTweetContext(contextGeneration)",
+    "self.loadTweets(result, contextGeneration: contextGeneration)",
+    "} else if prev == 1 {",
+    "invalidateBeaconTweetContext()",
 )
-if -1 in positions or not (
-    search_callback < search_dispatch < load_invocation and
-    guest_callback < guest_dispatch < session_failure < tweet_request <
-    result_dispatch < loading_reset < stale_check < tweet_assignment
-):
-    raise SystemExit(
-        "Twitter callbacks must publish state on the main queue after stale-context validation"
-    )
+positions = []
+start = 0
+for item in required_ranging:
+    position = ranging.find(item, start)
+    positions.append(position)
+    start = position + len(item) if position != -1 else start
+if -1 in positions:
+    raise SystemExit("Ranging must invalidate, capture, and propagate beacon context generations in order")
 
-if source.count("dispatch_async(dispatch_get_main_queue())") != 3 or load.count(
+required_refresh = (
+    "let contextGeneration = beaconTweetContextGeneration",
+    "if !self.hasActiveBeaconTweetContext(contextGeneration)",
+    "dispatch_async(dispatch_get_main_queue())",
+    "if !self.hasActiveBeaconTweetContext(contextGeneration)",
+    "self.loadTweets(result, contextGeneration: contextGeneration)",
+)
+positions = []
+start = 0
+for item in required_refresh:
+    position = refresh.find(item, start)
+    positions.append(position)
+    start = position + len(item) if position != -1 else start
+if -1 in positions:
+    raise SystemExit("Refresh must capture, validate, and propagate its beacon context generation")
+
+authorization_start = source.find("func locationManager(manager: CLLocationManager!, didChangeAuthorizationStatus")
+authorization_end = source.find("func invalidateBeaconTweetContext()", authorization_start)
+authorization = source[authorization_start:authorization_end]
+authorization_contract = (
+    "} else {",
+    "if prev == 1",
+    "invalidateBeaconTweetContext()",
+    "manager.stopRangingBeaconsInRegion(region)",
+)
+positions = [authorization.find(item) for item in authorization_contract]
+if -1 in positions or positions != sorted(positions):
+    raise SystemExit("Authorization loss must invalidate close beacon context before ranging stops")
+
+if source.count("invalidateBeaconTweetContext()") != 6:
+    raise SystemExit("Beacon context must be invalidated on hide, authorization loss, nil, proximity loss, and unknown-only ranging")
+if source.count("dispatch_async(dispatch_get_main_queue())") != 4 or load.count(
     "dispatch_async(dispatch_get_main_queue())"
-) != 2 or load.count(
-    "self.tweets = loadedTweets"
-) != 1:
-    raise SystemExit(
-        "Twitter callbacks must retain three main-queue boundaries and one publication"
-    )
+) != 2 or load.count("self.tweets = loadedTweets") != 1:
+    raise SystemExit("Twitter callbacks must retain four main-queue boundaries and one publication")
+
+generation = 0
+old_request = generation
+generation += 1
+new_request = generation
+if old_request == generation or new_request != generation:
+    raise SystemExit("Synthetic leave-and-return generation model did not reject the old request")
 PY
 
 if ! grep -Fq "if let loadedTweetObjects = twttrs" "$ROOT_DIR/settee/ViewController.swift" ||
@@ -572,6 +600,20 @@ if ! grep -Fq "Search, guest-login, and tweet-load callbacks publish controller 
   printf '%s\n' "Project guidance must preserve main-queue Twitter state publication." >&2
   exit 1
 fi
+
+if ! grep -Fq "status: completed" "$BEACON_CONTEXT_GENERATION_PLAN" ||
+  ! grep -Fq "make check" "$BEACON_CONTEXT_GENERATION_PLAN" ||
+  ! grep -Fq "hostile mutations were rejected" "$BEACON_CONTEXT_GENERATION_PLAN"; then
+  printf '%s\n' "Beacon context generation plan must record completed verification." >&2
+  exit 1
+fi
+
+for document in "$ROOT_DIR/README.md" "$ROOT_DIR/SECURITY.md" "$ROOT_DIR/VISION.md" "$ROOT_DIR/CHANGES.md" "$ROOT_DIR/AGENTS.md"; do
+  if ! grep -Fq "generation token" "$document"; then
+    printf '%s\n' "$document must document the beacon generation token boundary." >&2
+    exit 1
+  fi
+done
 
 if ! grep -Fq "credential-free HTTPS" "$ROOT_DIR/README.md" ||
   ! grep -Fq "credential-free HTTPS URLs" "$ROOT_DIR/SECURITY.md" ||

@@ -78,6 +78,8 @@ URLs with a hostname; rejected link details are not logged.
 Guest login and tweet-load callbacks recheck that the beacon screen is visible
 and the user remains immediately close before starting or displaying results,
 so stale asynchronous responses cannot repopulate the table after context ends.
+A beacon generation token also prevents callbacks from an earlier leave-and-
+return cycle from publishing into a newer close-range session.
 Queued ranging callbacks return before Twitter search when the beacon screen is
 already hidden.
 Search, guest-login, and tweet-load callbacks publish controller and table

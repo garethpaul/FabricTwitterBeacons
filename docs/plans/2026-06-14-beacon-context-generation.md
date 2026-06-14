@@ -1,7 +1,7 @@
 ---
 title: Beacon Tweet Context Generation
 type: reliability
-status: planned
+status: completed
 date: 2026-06-14
 ---
 
@@ -29,8 +29,8 @@ leave-and-return cycle cannot overwrite the current beacon session.
 
 - R1. A callback from a prior close-beacon cycle must fail closed after the
   user leaves and returns.
-- R2. Empty, unknown, near, far, and hidden ranging states must invalidate a
-  previously active close context exactly when that context is lost.
+- R2. Authorization loss plus empty, unknown, near, far, and hidden ranging
+  states must invalidate a previously active close context when it is lost.
 - R3. Search and refresh flows must capture and propagate their initiating
   generation to `loadTweets`.
 - R4. Static contracts must prove generation capture, invalidation, propagation,
@@ -44,14 +44,21 @@ leave-and-return cycle cannot overwrite the current beacon session.
 - Changing beacon UUIDs, authorization scope, proximity thresholds, or UI copy.
 - Claiming physical beacon/Twitter behavior without the existing device runbook.
 
-## Planned Verification
+## Verification
 
-- Run focused source-order and synthetic leave/return generation checks.
-- Run the full `make check` gate from the checkout and `/tmp`.
-- Reject isolated hostile mutations for missing invalidation, generation
-  propagation, equality checks, publication order, documentation, and completed
-  plan evidence.
-- Run plist parsing, exact intended-path, project/dependency, artifact,
-  conflict-marker, whitespace, and changed-line credential audits.
-- Take one bounded exact-head hosted check and code-scanning snapshot after push;
-  do not poll pending jobs.
+- Focused source-order and synthetic leave/return generation checks passed.
+- Seven isolated hostile mutations were rejected for generation increment,
+  equality, propagation, in-flight ownership, authorization-loss invalidation,
+  documentation, and completed-plan evidence.
+- `make check` passed from the checkout and from `/tmp` through the absolute
+  Makefile path. Both runs truthfully skipped `xcodebuild` because it is not
+  installed on the Linux host.
+- Both plist parses, exact intended-path review, unchanged project/framework/
+  workflow inspection, generated-artifact, untracked-file, conflict-marker,
+  whitespace, and changed-line credential-pattern audits passed.
+- Sequential Swift correctness, lifecycle, concurrency, maintainability, and
+  test review found no actionable issue. XcodeBuildMCP is not connected, so
+  hosted macOS parsing and the physical-device runbook remain authoritative.
+- Browser testing is not applicable to this native beacon application.
+- One bounded exact-head hosted check and code-scanning snapshot is required
+  after push; pending jobs will not be polled.

@@ -55,6 +55,7 @@
 - Treat iBeacon UUIDs and proximity behavior as sensitive physical-device configuration. Do not log beacon payloads or user proximity transitions without a reviewed need.
 - Do not log Twitter usernames, tweet IDs, raw API errors, or account-specific response details from beacon-triggered flows.
 - Beacon-triggered tweet loading must limit result IDs, skip empty searches, suppress overlapping guest loads, complete failures with empty results, fail closed on malformed JSON, and type-check loaded TwitterKit objects before replacing visible rows.
+- Preserve the beacon generation token through search, login, load, and in-flight ownership so prior leave-and-return callbacks fail closed.
 - Hosted macOS CI proves the Xcode project parses and the static contracts pass; it does not prove signing, Fabric/Twitter authentication, beacon ranging, or physical-device behavior.
 - Use `docs/manual-beacon-twitter-verification.md` for physical-device verification. Preserve its when-in-use authorization, visible-screen ranging, immediate-only loading, stale-result, bounded load, permalink, privacy, cleanup, redacted-evidence, and unexecuted-status boundaries.
 

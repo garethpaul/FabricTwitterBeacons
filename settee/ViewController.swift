@@ -47,7 +47,8 @@ class ViewController: UITableViewController, CLLocationManagerDelegate, TWTRTwee
 
     let tweetTableCellReuseIdentifier = "TweetCell"
 
-    var isLoadingTweets = false
+    var loadingTweetContextGeneration: Int?
+    var beaconTweetContextGeneration = 0
     var isBeaconScreenVisible = false
     var prev: Int?
 
@@ -109,6 +110,7 @@ class ViewController: UITableViewController, CLLocationManagerDelegate, TWTRTwee
 
     override func viewWillDisappear(animated: Bool) {
         super.viewWillDisappear(animated)
+        invalidateBeaconTweetContext()
         isBeaconScreenVisible = false
         locationManager.stopRangingBeaconsInRegion(region)
     }
@@ -130,41 +132,55 @@ class ViewController: UITableViewController, CLLocationManagerDelegate, TWTRTwee
         if status == CLAuthorizationStatus.Authorized && isBeaconScreenVisible {
             manager.startRangingBeaconsInRegion(region)
         } else {
+            if prev == 1 {
+                invalidateBeaconTweetContext()
+            }
             manager.stopRangingBeaconsInRegion(region)
         }
     }
 
-    func hasActiveBeaconTweetContext() -> Bool {
-        return isBeaconScreenVisible && prev == 1
+    func invalidateBeaconTweetContext() {
+        beaconTweetContextGeneration += 1
+        prev = nil
     }
 
-    func loadTweets(tweetIDs: [String]) {
+    func hasActiveBeaconTweetContext(contextGeneration: Int) -> Bool {
+        return isBeaconScreenVisible && prev == 1 && contextGeneration == beaconTweetContextGeneration
+    }
+
+    func finishLoadingTweets(contextGeneration: Int) {
+        if loadingTweetContextGeneration == contextGeneration {
+            loadingTweetContextGeneration = nil
+        }
+    }
+
+    func loadTweets(tweetIDs: [String], contextGeneration: Int) {
         if tweetIDs.isEmpty {
             return
         }
 
-        if !self.hasActiveBeaconTweetContext() {
+        if !self.hasActiveBeaconTweetContext(contextGeneration) {
             return
         }
 
-        // Do not trigger another request if one is already in progress.
-        if self.isLoadingTweets {
+        // Do not trigger another request for the same beacon context.
+        if self.loadingTweetContextGeneration == contextGeneration {
             return
         }
 
-        self.isLoadingTweets = true
+        self.loadingTweetContextGeneration = contextGeneration
 
         // load tweets with guest login
         Twitter.sharedInstance().logInGuestWithCompletion { (session: TWTRGuestSession!, error: NSError!) in
             dispatch_async(dispatch_get_main_queue()) {
                 if session == nil {
-                    self.isLoadingTweets = false
+                    self.finishLoadingTweets(contextGeneration)
                     println("Twitter guest login failed")
                     return
                 }
 
-                if !self.hasActiveBeaconTweetContext() {
-                    self.isLoadingTweets = false
+                if !self.hasActiveBeaconTweetContext(contextGeneration) {
+                    self.finishLoadingTweets(contextGeneration)
                     return
                 }
 
@@ -172,9 +188,9 @@ class ViewController: UITableViewController, CLLocationManagerDelegate, TWTRTwee
                 Twitter.sharedInstance().APIClient.loadTweetsWithIDs(tweetIDs) {
                     (twttrs, error) -> Void in
                     dispatch_async(dispatch_get_main_queue()) {
-                        self.isLoadingTweets = false
+                        self.finishLoadingTweets(contextGeneration)
 
-                        if !self.hasActiveBeaconTweetContext() {
+                        if !self.hasActiveBeaconTweetContext(contextGeneration) {
                             return
                         }
 
@@ -215,6 +231,9 @@ class ViewController: UITableViewController, CLLocationManagerDelegate, TWTRTwee
         }
 
         if beacons == nil {
+            if prev == 1 {
+                invalidateBeaconTweetContext()
+            }
             return
         }
 
@@ -227,9 +246,17 @@ class ViewController: UITableViewController, CLLocationManagerDelegate, TWTRTwee
 
             // If the proximity does not equal the prev value set the user has become closer or further away from the beacon
             if prev != closestBeacon.proximity.rawValue {
+                let previousProximity = prev
+
+                if previousProximity == 1 && proximity != 1 {
+                    invalidateBeaconTweetContext()
+                }
+
+                prev = proximity
 
                 // If the proximity is very close - we should show some TV tweets
                 if (proximity == 1){
+                    let contextGeneration = beaconTweetContextGeneration
 
                     // Create a single prototype cell for height calculations.
                     self.prototypeCell = TWTRTweetTableViewCell(style: .Default, reuseIdentifier: tweetTableCellReuseIdentifier)
@@ -240,8 +267,12 @@ class ViewController: UITableViewController, CLLocationManagerDelegate, TWTRTwee
                     // Send a request to the Search API. Check out TVSearchAPI.swift for details..
                     Search() { (result: [String]) in
                         dispatch_async(dispatch_get_main_queue()) {
+                            if !self.hasActiveBeaconTweetContext(contextGeneration) {
+                                return
+                            }
+
                             // Load the array back to display the Tweets
-                            self.loadTweets(result)
+                            self.loadTweets(result, contextGeneration: contextGeneration)
                         }
                     }
 
@@ -253,7 +284,7 @@ class ViewController: UITableViewController, CLLocationManagerDelegate, TWTRTwee
 
                     // If the previous value was 1 aka close then we need to start again remove the tweets and wait for the 
                     // user to come back in range.
-                    if prev == 1 {
+                    if previousProximity == 1 {
 
                         // remove the Label from View
                         label.removeFromSuperview()
@@ -268,10 +299,6 @@ class ViewController: UITableViewController, CLLocationManagerDelegate, TWTRTwee
                         setupView()
                     }
                 }
-
-                // set previous value
-                prev = proximity
-
 
             }
 
@@ -289,14 +316,27 @@ class ViewController: UITableViewController, CLLocationManagerDelegate, TWTRTwee
                 label.removeFromSuperview()
 
             }
+        } else if prev == 1 {
+            invalidateBeaconTweetContext()
         }
     }
 
 
     func refreshInvoked() {
+        let contextGeneration = beaconTweetContextGeneration
+        if !self.hasActiveBeaconTweetContext(contextGeneration) {
+            return
+        }
+
         // Trigger a load for the most recent Tweets.
         Search() { (result: [String]) in
-            self.loadTweets(result)
+            dispatch_async(dispatch_get_main_queue()) {
+                if !self.hasActiveBeaconTweetContext(contextGeneration) {
+                    return
+                }
+
+                self.loadTweets(result, contextGeneration: contextGeneration)
+            }
         }
     }
 

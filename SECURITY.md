@@ -64,6 +64,9 @@ Beacon-triggered Twitter callbacks should recheck visible-screen and immediate
 proximity context before authentication continues or loaded tweets become
 visible.
 
+Each close-range session should carry a beacon generation token through search,
+login, and load callbacks so an older leave-and-return cycle cannot publish.
+
 Hidden-screen ranging callbacks must not start Twitter search after ranging is
 stopped for view disappearance.
 
