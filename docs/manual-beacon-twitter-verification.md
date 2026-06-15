@@ -78,11 +78,13 @@ private tweets, request/response bodies, signing material, or unredacted logs.
 
 ## Permalink Navigation
 
-1. Select a controlled loaded tweet with a credential-free HTTPS permalink and
-   a non-empty hostname. Confirm exactly one in-app web view is pushed.
-2. Use a controlled invalid, non-HTTPS, hostless, or credential-bearing test URL
-   only through an authorized test fixture/build. Confirm no request is loaded,
-   no web view is pushed, and the rejected URL or tweet details are not logged.
+1. Select a controlled loaded tweet with a credential-free HTTPS permalink on
+   canonical Twitter and X hosts with no explicit port and a non-empty hostname.
+   Confirm exactly one in-app web view is pushed.
+2. Use a controlled invalid, non-HTTPS, hostless, or credential-bearing test URL,
+   plus explicit-port, unrelated-host, subdomain, and suffix-lookalike URLs, only
+   through an authorized test fixture/build. Confirm no request is loaded, no
+   web view is pushed, and the rejected URL or tweet details are not logged.
 3. Return to the beacon screen and confirm navigation does not broaden location
    authorization or trigger an overlapping Twitter load.
 

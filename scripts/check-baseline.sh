@@ -17,6 +17,8 @@ CI_PLAN="$ROOT_DIR/docs/plans/2026-06-10-ci-baseline.md"
 STALE_TWEET_PLAN="$ROOT_DIR/docs/plans/2026-06-12-stale-beacon-tweet-results.md"
 ROOT_INDEPENDENT_MAKE_PLAN="$ROOT_DIR/docs/plans/2026-06-12-root-independent-makefile.md"
 TWEET_PERMALINK_PLAN="$ROOT_DIR/docs/plans/2026-06-13-tweet-permalink-validation.md"
+TWEET_PERMALINK_HOST_PLAN="$ROOT_DIR/docs/plans/2026-06-15-twitter-permalink-host-boundary.md"
+TWEET_PERMALINK_HOST_CHECK="$ROOT_DIR/scripts/check-twitter-permalink-host-boundary.py"
 DEVICE_VERIFICATION_PLAN="$ROOT_DIR/docs/plans/2026-06-13-device-beacon-twitter-verification.md"
 TWITTER_MAIN_QUEUE_PLAN="$ROOT_DIR/docs/plans/2026-06-13-twitter-main-queue-publication.md"
 VIEW_APPEARANCE_PLAN="$ROOT_DIR/docs/plans/2026-06-13-view-appearance-lifecycle-consolidation.md"
@@ -67,6 +69,8 @@ for path in \
   "docs/plans/2026-06-12-stale-beacon-tweet-results.md" \
   "docs/plans/2026-06-12-root-independent-makefile.md" \
   "docs/plans/2026-06-13-tweet-permalink-validation.md" \
+  "docs/plans/2026-06-15-twitter-permalink-host-boundary.md" \
+  "scripts/check-twitter-permalink-host-boundary.py" \
   "docs/plans/2026-06-13-device-beacon-twitter-verification.md" \
   "docs/plans/2026-06-13-twitter-main-queue-publication.md" \
   "docs/plans/2026-06-13-view-appearance-lifecycle-consolidation.md" \
@@ -84,6 +88,7 @@ for path in \
 done
 
 python3 "$STALE_PRESENTATION_CHECK" "$ROOT_DIR/settee/ViewController.swift"
+python3 "$TWEET_PERMALINK_HOST_CHECK" "$ROOT_DIR/settee/ViewController.swift"
 python3 "$TWITTER_SEARCH_PARSE_BOUNDARY_CHECK" \
   "$ROOT_DIR/settee/TVSearchAPI.swift" \
   "$TWITTER_SEARCH_PARSE_BOUNDARY_PLAN"
@@ -454,12 +459,13 @@ if ! grep -Fq "if let loadedTweetObjects = twttrs" "$ROOT_DIR/settee/ViewControl
 fi
 
 for permalink_contract in \
+  "func isCanonicalTweetPermalinkHost(host: String?) -> Bool" \
   "func validatedTweetPermalink(url: NSURL?) -> NSURL?" \
   'candidate.scheme?.lowercaseString == "https"' \
   "candidate.user == nil" \
   "candidate.password == nil" \
-  "if let host = candidate.host" \
-  "if !host.isEmpty" \
+  "candidate.port == nil" \
+  "isCanonicalTweetPermalinkHost(candidate.host)" \
   "validatedTweetPermalink(tweet?.permalink)" \
   'println("Tweet permalink was rejected")'; do
   if ! grep -Fq "$permalink_contract" "$ROOT_DIR/settee/ViewController.swift"; then
@@ -484,6 +490,20 @@ if -1 in (selection, validation, web_view, request_load, push) or not (
 ):
     raise SystemExit("Tweet permalink validation must precede request and web-view navigation")
 PY
+
+if ! grep -Fq "status: completed" "$TWEET_PERMALINK_HOST_PLAN" ||
+  ! grep -Fq "hostile mutations were rejected" "$TWEET_PERMALINK_HOST_PLAN" ||
+  ! grep -Fq "make check" "$TWEET_PERMALINK_HOST_PLAN"; then
+  printf '%s\n' "Twitter permalink host boundary plan must record completed verification." >&2
+  exit 1
+fi
+
+for document in "$ROOT_DIR/README.md" "$ROOT_DIR/SECURITY.md" "$ROOT_DIR/VISION.md" "$ROOT_DIR/CHANGES.md" "$ROOT_DIR/AGENTS.md" "$DEVICE_VERIFICATION"; do
+  if ! grep -Fq "canonical Twitter and X hosts with no explicit port" "$document"; then
+    printf '%s\n' "$document must document the canonical Twitter permalink host boundary." >&2
+    exit 1
+  fi
+done
 
 if ! grep -Fq "make check" "$ROOT_DIR/README.md" ||
   ! grep -Fq "GitHub Actions" "$ROOT_DIR/README.md" ||

@@ -56,8 +56,8 @@ Current baseline:
 - Published tweets are cleared and the existing waiting presentation is
   restored when that close-beacon context is lost.
 - One `viewWillAppear` override owns visible-use ranging and logo animation.
-- Tweet selection validates credential-free HTTPS permalinks with a hostname
-  before in-app navigation.
+- Tweet selection validates credential-free HTTPS permalinks on
+  canonical Twitter and X hosts with no explicit port before in-app navigation.
 - Local `.env` and `.xcconfig` files stay ignored because they may contain
   Fabric, Twitter, signing, or beacon configuration.
 - Xcode project listing is attempted when `xcodebuild` is installed; otherwise

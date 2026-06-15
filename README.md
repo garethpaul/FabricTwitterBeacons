@@ -74,7 +74,8 @@ Loaded TwitterKit tweet objects are type-checked before replacing the visible
 table contents, so unexpected response objects do not crash the table or append
 duplicate stale rows.
 Selected tweet permalinks are opened only when they are credential-free HTTPS
-URLs with a hostname; rejected link details are not logged.
+URLs on canonical Twitter and X hosts with no explicit port; exact host matching
+rejects subdomain and suffix lookalikes, and rejected link details are not logged.
 Guest login and tweet-load callbacks recheck that the beacon screen is visible
 and the user remains immediately close before starting or displaying results,
 so stale asynchronous responses cannot repopulate the table after context ends.
@@ -159,6 +160,8 @@ When the required SDK or runtime is unavailable, use static checks and source re
   Makefile verification contract.
 - See `docs/plans/2026-06-13-tweet-permalink-validation.md` for the in-app tweet
   navigation boundary.
+- See `docs/plans/2026-06-15-twitter-permalink-host-boundary.md` for the exact
+  Twitter/X host and default-port navigation boundary.
 - See `docs/manual-beacon-twitter-verification.md` for the physical-device
   authorization, ranging, proximity, Twitter, stale-result, permalink, privacy,
   cleanup, and redacted-evidence checklist.

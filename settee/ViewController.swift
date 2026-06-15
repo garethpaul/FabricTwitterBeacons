@@ -10,16 +10,25 @@ import UIKit
 import CoreLocation
 import TwitterKit
 
+func isCanonicalTweetPermalinkHost(host: String?) -> Bool {
+    if let candidateHost = host?.lowercaseString {
+        return candidateHost == "twitter.com" ||
+            candidateHost == "www.twitter.com" ||
+            candidateHost == "x.com" ||
+            candidateHost == "www.x.com"
+    }
+
+    return false
+}
+
 func validatedTweetPermalink(url: NSURL?) -> NSURL? {
     if let candidate = url {
         if candidate.scheme?.lowercaseString == "https" &&
             candidate.user == nil &&
-            candidate.password == nil {
-            if let host = candidate.host {
-                if !host.isEmpty {
-                    return candidate
-                }
-            }
+            candidate.password == nil &&
+            candidate.port == nil &&
+            isCanonicalTweetPermalinkHost(candidate.host) {
+            return candidate
         }
     }
 

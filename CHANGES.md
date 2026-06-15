@@ -1,5 +1,11 @@
 # Changes
 
+## 2026-06-15
+
+- Enforced canonical Twitter and X hosts with no explicit port for in-app tweet
+  navigation, rejecting unrelated domains and host lookalikes before web-view
+  creation.
+
 ## 2026-06-14
 
 - Reserved active beacon generations before Twitter search dispatch to prevent
