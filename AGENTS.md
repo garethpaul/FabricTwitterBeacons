@@ -27,12 +27,12 @@
 
 ## Coding conventions
 
-- Language mix noted in the README: C/C++ headers (21), Swift (12).
+- Language mix noted in the README: C/C++ headers (21), Swift (14).
 - Preserve legacy Xcode project settings and signing assumptions unless the change is explicitly about modernization.
 
 ## Testing guidance
 
-- `setteeTests/setteeTests.swift` contains only template assertions; do not treat it as meaningful beacon, Twitter, privacy, or lifecycle coverage. The maintained regression gate is `make check`.
+- `setteeTests/setteeTests.swift` contains only template assertions; do not treat it as meaningful beacon, Twitter, privacy, or lifecycle coverage. `Tests/TweetPermalinkPolicyTests/main.swift` is the standalone behavioral harness, and every Make gate compiles it with production policy when `swiftc` is available.
 - Start with the narrowest relevant test or Make target, then run `make check` before handing off if the change is not documentation-only.
 - Keep README verification notes in sync when commands, fixtures, or supported toolchains change.
 
@@ -56,6 +56,7 @@
 - Do not log Twitter usernames, tweet IDs, raw API errors, or account-specific response details from beacon-triggered flows.
 - Beacon-triggered tweet loading must limit result IDs, skip empty searches, suppress overlapping guest loads, complete failures with empty results, require HTTP 200 and at most 1 MiB before search JSON parsing, fail closed on malformed JSON, and type-check loaded TwitterKit objects before replacing visible rows.
 - Open tweet permalinks only on canonical Twitter and X hosts with no explicit port; preserve exact host matching and reject credentials, subdomains, and suffix lookalikes before creating a web request.
+- Keep that permalink policy in the app target and execute the same production source from the standalone Swift harness.
 - Preserve the beacon generation token through search, login, load, and in-flight ownership so prior leave-and-return callbacks fail closed.
 - Reserve the active beacon generation before Twitter search dispatch so repeated ranging or refresh events cannot start duplicate chains.
 - Clear already-published tweets and restore the existing waiting UI when the

@@ -21,15 +21,20 @@ def accepts(url: str) -> bool:
 
 
 def main() -> None:
-    if len(sys.argv) != 2:
-        raise SystemExit("usage: check-twitter-permalink-host-boundary.py <ViewController.swift>")
+    if len(sys.argv) != 3:
+        raise SystemExit(
+            "usage: check-twitter-permalink-host-boundary.py "
+            "<TweetPermalinkPolicy.swift> <ViewController.swift>"
+        )
 
     source = Path(sys.argv[1]).read_text(encoding="utf-8")
+    navigation = Path(sys.argv[2]).read_text(encoding="utf-8")
     required = (
         'candidateHost == "twitter.com"',
         'candidateHost == "www.twitter.com"',
         'candidateHost == "x.com"',
         'candidateHost == "www.x.com"',
+        'NSString(string: scheme).lowercaseString == "https"',
         "candidate.port == nil",
         "isCanonicalTweetPermalinkHost(candidate.host)",
     )
@@ -47,11 +52,11 @@ def main() -> None:
     if allowed_hosts != list(CANONICAL_HOSTS):
         raise SystemExit("Tweet permalink host allowlist must contain exactly four canonical hosts")
 
-    selection = source.find("func tweetView(tweetView: TWTRTweetView!, didSelectTweet tweet: TWTRTweet!)")
-    validation = source.find("validatedTweetPermalink(tweet?.permalink)", selection)
-    web_view = source.find("let webView = UIWebView", selection)
-    request_load = source.find("webView.loadRequest(NSURLRequest(URL: permalink))", selection)
-    push = source.find("pushViewController", selection)
+    selection = navigation.find("func tweetView(tweetView: TWTRTweetView!, didSelectTweet tweet: TWTRTweet!)")
+    validation = navigation.find("validatedTweetPermalink(tweet?.permalink)", selection)
+    web_view = navigation.find("let webView = UIWebView", selection)
+    request_load = navigation.find("webView.loadRequest(NSURLRequest(URL: permalink))", selection)
+    push = navigation.find("pushViewController", selection)
     if -1 in (selection, validation, web_view, request_load, push) or not (
         selection < validation < web_view < request_load < push
     ):

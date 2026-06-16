@@ -11,6 +11,7 @@
 		FD4BC5C71A3E6E3C005E4AEF /* Hex.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD4BC5C61A3E6E3C005E4AEF /* Hex.swift */; };
 		FDA4FB7B1A3E4ED10009463D /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = FDA4FB7A1A3E4ED10009463D /* AppDelegate.swift */; };
 		FDA4FB7D1A3E4ED10009463D /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = FDA4FB7C1A3E4ED10009463D /* ViewController.swift */; };
+		A16061611A3E4ED10009463D /* TweetPermalinkPolicy.swift in Sources */ = {isa = PBXBuildFile; fileRef = A16061621A3E4ED10009463D /* TweetPermalinkPolicy.swift */; };
 		FDA4FB801A3E4ED10009463D /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = FDA4FB7E1A3E4ED10009463D /* Main.storyboard */; };
 		FDA4FB821A3E4ED10009463D /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = FDA4FB811A3E4ED10009463D /* Images.xcassets */; };
 		FDA4FB851A3E4ED10009463D /* LaunchScreen.xib in Resources */ = {isa = PBXBuildFile; fileRef = FDA4FB831A3E4ED10009463D /* LaunchScreen.xib */; };
@@ -38,6 +39,7 @@
 		FDA4FB791A3E4ED10009463D /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		FDA4FB7A1A3E4ED10009463D /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		FDA4FB7C1A3E4ED10009463D /* ViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
+		A16061621A3E4ED10009463D /* TweetPermalinkPolicy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TweetPermalinkPolicy.swift; sourceTree = "<group>"; };
 		FDA4FB7F1A3E4ED10009463D /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
 		FDA4FB811A3E4ED10009463D /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Images.xcassets; sourceTree = "<group>"; };
 		FDA4FB841A3E4ED10009463D /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/LaunchScreen.xib; sourceTree = "<group>"; };
@@ -97,6 +99,7 @@
 			isa = PBXGroup;
 			children = (
 				FDA4FB7A1A3E4ED10009463D /* AppDelegate.swift */,
+				A16061621A3E4ED10009463D /* TweetPermalinkPolicy.swift */,
 				FDA4FB7C1A3E4ED10009463D /* ViewController.swift */,
 				FD0C29B61A3E5F4A00121E03 /* TVSearchAPI.swift */,
 				FD4BC5C61A3E6E3C005E4AEF /* Hex.swift */,
@@ -256,6 +259,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				A16061611A3E4ED10009463D /* TweetPermalinkPolicy.swift in Sources */,
 				FDA4FB7D1A3E4ED10009463D /* ViewController.swift in Sources */,
 				FD4BC5C71A3E6E3C005E4AEF /* Hex.swift in Sources */,
 				FD0C29B71A3E5F4A00121E03 /* TVSearchAPI.swift in Sources */,

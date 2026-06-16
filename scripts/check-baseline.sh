@@ -19,6 +19,7 @@ ROOT_INDEPENDENT_MAKE_PLAN="$ROOT_DIR/docs/plans/2026-06-12-root-independent-mak
 TWEET_PERMALINK_PLAN="$ROOT_DIR/docs/plans/2026-06-13-tweet-permalink-validation.md"
 TWEET_PERMALINK_HOST_PLAN="$ROOT_DIR/docs/plans/2026-06-15-twitter-permalink-host-boundary.md"
 TWEET_PERMALINK_HOST_CHECK="$ROOT_DIR/scripts/check-twitter-permalink-host-boundary.py"
+TWEET_PERMALINK_EXECUTION_PLAN="$ROOT_DIR/docs/plans/2026-06-16-executable-tweet-permalink-policy-tests.md"
 DEVICE_VERIFICATION_PLAN="$ROOT_DIR/docs/plans/2026-06-13-device-beacon-twitter-verification.md"
 TWITTER_MAIN_QUEUE_PLAN="$ROOT_DIR/docs/plans/2026-06-13-twitter-main-queue-publication.md"
 VIEW_APPEARANCE_PLAN="$ROOT_DIR/docs/plans/2026-06-13-view-appearance-lifecycle-consolidation.md"
@@ -53,6 +54,7 @@ for path in \
   "settee/AppDelegate.swift" \
   "settee/Info.plist" \
   "settee/RateLimit.swift" \
+  "settee/TweetPermalinkPolicy.swift" \
   "settee/ViewController.swift" \
   "settee/TVSearchAPI.swift" \
   "settee/RESTApi.swift" \
@@ -70,7 +72,10 @@ for path in \
   "docs/plans/2026-06-12-root-independent-makefile.md" \
   "docs/plans/2026-06-13-tweet-permalink-validation.md" \
   "docs/plans/2026-06-15-twitter-permalink-host-boundary.md" \
+  "docs/plans/2026-06-16-executable-tweet-permalink-policy-tests.md" \
   "scripts/check-twitter-permalink-host-boundary.py" \
+  "scripts/run-tweet-permalink-policy-tests.sh" \
+  "Tests/TweetPermalinkPolicyTests/main.swift" \
   "docs/plans/2026-06-13-device-beacon-twitter-verification.md" \
   "docs/plans/2026-06-13-twitter-main-queue-publication.md" \
   "docs/plans/2026-06-13-view-appearance-lifecycle-consolidation.md" \
@@ -88,10 +93,54 @@ for path in \
 done
 
 python3 "$STALE_PRESENTATION_CHECK" "$ROOT_DIR/settee/ViewController.swift"
-python3 "$TWEET_PERMALINK_HOST_CHECK" "$ROOT_DIR/settee/ViewController.swift"
+python3 "$TWEET_PERMALINK_HOST_CHECK" \
+  "$ROOT_DIR/settee/TweetPermalinkPolicy.swift" \
+  "$ROOT_DIR/settee/ViewController.swift"
 python3 "$TWITTER_SEARCH_PARSE_BOUNDARY_CHECK" \
   "$ROOT_DIR/settee/TVSearchAPI.swift" \
   "$TWITTER_SEARCH_PARSE_BOUNDARY_PLAN"
+
+python3 - "$PROJECT" "$MAKEFILE" \
+  "$ROOT_DIR/scripts/run-tweet-permalink-policy-tests.sh" \
+  "$ROOT_DIR/Tests/TweetPermalinkPolicyTests/main.swift" <<'PY'
+import sys
+from pathlib import Path
+
+project, makefile, runner, tests = (Path(path).read_text(encoding="utf-8") for path in sys.argv[1:])
+if project.count("TweetPermalinkPolicy.swift in Sources") != 2:
+    raise SystemExit("TweetPermalinkPolicy must belong to the app target once")
+if project.count("/* TweetPermalinkPolicy.swift */") != 3:
+    raise SystemExit("TweetPermalinkPolicy project references must remain complete and unique")
+if makefile.count("scripts/run-tweet-permalink-policy-tests.sh") != 1:
+    raise SystemExit("Every Make gate must invoke the executable tweet permalink tests once")
+runner_contract = (
+    "settee/TweetPermalinkPolicy.swift",
+    "Tests/TweetPermalinkPolicyTests/main.swift",
+    'mktemp -d "${TMPDIR:-/tmp}/tweet-permalink-policy-tests.XXXXXX"',
+    "trap cleanup 0",
+)
+if any(runner.count(fragment) != 1 for fragment in runner_contract):
+    raise SystemExit("Tweet permalink runner must compile production policy with bounded cleanup")
+test_contract = (
+    'accepted: true, "Twitter host"',
+    'accepted: true, "www Twitter host"',
+    'accepted: true, "X host"',
+    'accepted: true, "www X host"',
+    'accepted: true, "mixed-case host"',
+    'accepted: false, "missing URL"',
+    'accepted: false, "non-HTTPS scheme"',
+    'accepted: false, "userinfo"',
+    'accepted: false, "password"',
+    'accepted: false, "explicit port"',
+    'accepted: false, "unlisted subdomain"',
+    'accepted: false, "host suffix"',
+    'accepted: false, "host prefix"',
+    'accepted: false, "unrelated host"',
+    'accepted: false, "hostless URL"',
+)
+if any(tests.count(fragment) != 1 for fragment in test_contract):
+    raise SystemExit("Executable tweet permalink tests must preserve every accepted and hostile URL case")
+PY
 
 if ! grep -Fq "status: completed" "$TWITTER_SEARCH_PARSE_BOUNDARY_PLAN" ||
   ! grep -Fq "hostile mutations were rejected" "$TWITTER_SEARCH_PARSE_BOUNDARY_PLAN" ||
@@ -461,15 +510,22 @@ fi
 for permalink_contract in \
   "func isCanonicalTweetPermalinkHost(host: String?) -> Bool" \
   "func validatedTweetPermalink(url: NSURL?) -> NSURL?" \
-  'candidate.scheme?.lowercaseString == "https"' \
+  'NSString(string: scheme).lowercaseString == "https"' \
   "candidate.user == nil" \
   "candidate.password == nil" \
   "candidate.port == nil" \
-  "isCanonicalTweetPermalinkHost(candidate.host)" \
+  "isCanonicalTweetPermalinkHost(candidate.host)"; do
+  if ! grep -Fq "$permalink_contract" "$ROOT_DIR/settee/TweetPermalinkPolicy.swift"; then
+    printf '%s\n' "Tweet permalink validation contract is missing: $permalink_contract" >&2
+    exit 1
+  fi
+done
+
+for navigation_contract in \
   "validatedTweetPermalink(tweet?.permalink)" \
   'println("Tweet permalink was rejected")'; do
-  if ! grep -Fq "$permalink_contract" "$ROOT_DIR/settee/ViewController.swift"; then
-    printf '%s\n' "Tweet permalink validation contract is missing: $permalink_contract" >&2
+  if ! grep -Fq "$navigation_contract" "$ROOT_DIR/settee/ViewController.swift"; then
+    printf '%s\n' "Tweet permalink navigation contract is missing: $navigation_contract" >&2
     exit 1
   fi
 done
@@ -497,6 +553,34 @@ if ! grep -Fq "status: completed" "$TWEET_PERMALINK_HOST_PLAN" ||
   printf '%s\n' "Twitter permalink host boundary plan must record completed verification." >&2
   exit 1
 fi
+
+python3 - "$TWEET_PERMALINK_EXECUTION_PLAN" <<'PY'
+import re
+import sys
+from pathlib import Path
+
+plan = Path(sys.argv[1]).read_text(encoding="utf-8")
+frontmatter = plan.split("---", 2)[1]
+verification = plan.split("## Verification Completed\n", 1)[-1]
+required = (
+    "all four Make gates passed",
+    "absolute Makefile path passed",
+    "production policy mutation failed",
+    "navigation delegation mutation failed",
+    "Xcode target membership mutation failed",
+    "accepted URL mutation failed",
+    "hostile URL mutation failed",
+    "plan evidence mutation failed",
+    "hosted pull-request check",
+)
+if (
+    re.findall(r"^status: .+$", frontmatter, flags=re.MULTILINE) != ["status: completed"]
+    or "## Verification Completed\n" not in plan
+    or any(item not in verification for item in required)
+    or re.search(r"\b(?:pending|todo|tbd|not run|not yet)\b", verification, re.IGNORECASE)
+):
+    raise SystemExit("Executable tweet permalink test plan must retain completed evidence")
+PY
 
 for document in "$ROOT_DIR/README.md" "$ROOT_DIR/SECURITY.md" "$ROOT_DIR/VISION.md" "$ROOT_DIR/CHANGES.md" "$ROOT_DIR/AGENTS.md" "$DEVICE_VERIFICATION"; do
   if ! grep -Fq "canonical Twitter and X hosts with no explicit port" "$document"; then

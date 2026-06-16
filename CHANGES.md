@@ -1,5 +1,13 @@
 # Changes
 
+## 2026-06-16
+
+- Extracted the canonical Twitter/X permalink predicate into app production
+  source and added a standalone Swift harness that executes the same policy
+  against accepted and hostile URLs when `swiftc` is available.
+- Extended the maintained baseline to require app-target membership, navigation
+  delegation, harness wiring, and complete URL-case coverage.
+
 ## 2026-06-15
 
 - Enforced canonical Twitter and X hosts with no explicit port for in-app tweet

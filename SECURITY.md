@@ -35,6 +35,9 @@ Helpful reports include:
 - GitHub Actions runs `make check` and the Xcode project parse on a fixed macOS
   runner with pinned checkout, read-only repository access, no persisted checkout
   credentials, and no Fabric or Twitter credentials.
+- The canonical tweet-permalink predicate is compiled into the app target and
+  executed by the standalone Swift harness, so the tested security decision is
+  production source rather than a duplicated test implementation.
 
 ## Mobile Privacy Notes
 

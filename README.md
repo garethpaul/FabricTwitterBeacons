@@ -7,7 +7,7 @@
 
 `garethpaul/FabricTwitterBeacons` is an Apple platform application or Objective-C/Swift sample. Tweets based on physical proximity to iBeacons. 
 
-This README is based on the checked-in source, manifests, scripts, and repository metadata on the `master` branch. The project language mix found during review was: C/C++ headers (21), Swift (12).
+This README is based on the checked-in source, manifests, scripts, and repository metadata on the `master` branch. The project language mix found during review was: C/C++ headers (21), Swift (14).
 
 ## Repository Contents
 
@@ -59,6 +59,11 @@ Run the repository baseline:
 make check
 ```
 
+When `swiftc` is available, every Make gate first compiles and executes the
+production tweet-permalink policy against canonical and hostile URLs. The same
+source is compiled into the app target; the legacy XCTest target remains
+template-only and is not treated as behavioral evidence.
+
 The Makefile resolves repository paths from its own location, so
 `make -f /absolute/path/to/Makefile check` also works from another directory.
 
@@ -76,6 +81,8 @@ duplicate stale rows.
 Selected tweet permalinks are opened only when they are credential-free HTTPS
 URLs on canonical Twitter and X hosts with no explicit port; exact host matching
 rejects subdomain and suffix lookalikes, and rejected link details are not logged.
+That production decision is shared with the standalone executable Swift harness
+instead of being reimplemented only in a static checker.
 Guest login and tweet-load callbacks recheck that the beacon screen is visible
 and the user remains immediately close before starting or displaying results,
 so stale asynchronous responses cannot repopulate the table after context ends.
