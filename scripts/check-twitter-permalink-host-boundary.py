@@ -40,6 +40,8 @@ def main() -> None:
         "let normalizedScheme = scheme.lowercased()",
         "let normalizedScheme = scheme.lowercaseString",
         'normalizedScheme == "https"',
+        "let hasCanonicalHost = isCanonicalTweetPermalinkHost",
+        "if hasCanonicalHost",
         "candidate.port == nil",
         "isCanonicalTweetPermalinkHost(candidate.host)",
     )

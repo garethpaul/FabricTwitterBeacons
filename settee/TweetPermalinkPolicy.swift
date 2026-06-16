@@ -29,10 +29,11 @@ func validatedTweetPermalink(url: NSURL?) -> NSURL? {
                 candidate.password == nil &&
                 candidate.port == nil {
 #if EXECUTABLE_POLICY_TESTS
-                if isCanonicalTweetPermalinkHost(host: candidate.host) {
+                let hasCanonicalHost = isCanonicalTweetPermalinkHost(host: candidate.host)
 #else
-                if isCanonicalTweetPermalinkHost(candidate.host) {
+                let hasCanonicalHost = isCanonicalTweetPermalinkHost(candidate.host)
 #endif
+                if hasCanonicalHost {
                     return candidate
                 }
             }
