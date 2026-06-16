@@ -14,6 +14,7 @@ trap 'exit 130' 2
 trap 'exit 143' 15
 
 "$SWIFTC" \
+    -D EXECUTABLE_POLICY_TESTS \
     "$ROOT/settee/TweetPermalinkPolicy.swift" \
     "$ROOT/Tests/TweetPermalinkPolicyTests/main.swift" \
     -o "$BUILD_DIR/tweet-permalink-policy-tests"

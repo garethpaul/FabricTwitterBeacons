@@ -114,6 +114,7 @@ if project.count("/* TweetPermalinkPolicy.swift */") != 3:
 if makefile.count("scripts/run-tweet-permalink-policy-tests.sh") != 1:
     raise SystemExit("Every Make gate must invoke the executable tweet permalink tests once")
 runner_contract = (
+    "-D EXECUTABLE_POLICY_TESTS",
     "settee/TweetPermalinkPolicy.swift",
     "Tests/TweetPermalinkPolicyTests/main.swift",
     'mktemp -d "${TMPDIR:-/tmp}/tweet-permalink-policy-tests.XXXXXX"',
@@ -510,7 +511,7 @@ fi
 for permalink_contract in \
   "func isCanonicalTweetPermalinkHost(host: String?) -> Bool" \
   "func validatedTweetPermalink(url: NSURL?) -> NSURL?" \
-  'NSString(string: scheme).lowercaseString == "https"' \
+  'normalizedScheme == "https"' \
   "candidate.user == nil" \
   "candidate.password == nil" \
   "candidate.port == nil" \

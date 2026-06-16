@@ -2,7 +2,11 @@ import Foundation
 
 func isCanonicalTweetPermalinkHost(host: String?) -> Bool {
     if let host = host {
-        let candidateHost = NSString(string: host).lowercaseString
+#if EXECUTABLE_POLICY_TESTS
+        let candidateHost = host.lowercased()
+#else
+        let candidateHost = host.lowercaseString
+#endif
         return candidateHost == "twitter.com" ||
             candidateHost == "www.twitter.com" ||
             candidateHost == "x.com" ||
@@ -15,12 +19,22 @@ func isCanonicalTweetPermalinkHost(host: String?) -> Bool {
 func validatedTweetPermalink(url: NSURL?) -> NSURL? {
     if let candidate = url {
         if let scheme = candidate.scheme {
-            if NSString(string: scheme).lowercaseString == "https" &&
+#if EXECUTABLE_POLICY_TESTS
+            let normalizedScheme = scheme.lowercased()
+#else
+            let normalizedScheme = scheme.lowercaseString
+#endif
+            if normalizedScheme == "https" &&
                 candidate.user == nil &&
                 candidate.password == nil &&
-                candidate.port == nil &&
-                isCanonicalTweetPermalinkHost(candidate.host) {
-                return candidate
+                candidate.port == nil {
+#if EXECUTABLE_POLICY_TESTS
+                if isCanonicalTweetPermalinkHost(host: candidate.host) {
+#else
+                if isCanonicalTweetPermalinkHost(candidate.host) {
+#endif
+                    return candidate
+                }
             }
         }
     }

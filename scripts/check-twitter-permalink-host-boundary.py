@@ -34,7 +34,12 @@ def main() -> None:
         'candidateHost == "www.twitter.com"',
         'candidateHost == "x.com"',
         'candidateHost == "www.x.com"',
-        'NSString(string: scheme).lowercaseString == "https"',
+        "#if EXECUTABLE_POLICY_TESTS",
+        "let candidateHost = host.lowercased()",
+        "let candidateHost = host.lowercaseString",
+        "let normalizedScheme = scheme.lowercased()",
+        "let normalizedScheme = scheme.lowercaseString",
+        'normalizedScheme == "https"',
         "candidate.port == nil",
         "isCanonicalTweetPermalinkHost(candidate.host)",
     )

@@ -10,7 +10,7 @@ private func expect(_ urlString: String?, accepted expected: Bool, _ message: St
         url = nil
     }
 
-    let actual = validatedTweetPermalink(url) != nil
+    let actual = validatedTweetPermalink(url: url) != nil
     if actual != expected {
         failureCount += 1
         print("FAIL: \(message): expected \(expected), got \(actual)")
