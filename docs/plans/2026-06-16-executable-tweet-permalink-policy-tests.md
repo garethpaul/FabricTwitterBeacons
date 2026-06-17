@@ -49,5 +49,9 @@ without requiring Fabric, TwitterKit, credentials, a simulator, or a beacon.
   scans, and changed-line credential-pattern scans passed.
 - `swiftc` and Xcode are unavailable on this Linux host, so local gates verify
   deterministic source wiring and defer Swift execution to hosted macOS.
-- The hosted pull-request check is recorded against the exact pushed head in
-  the external engineering tracker.
+- The implementation was committed as
+  `6b62a4e33010c9f64ae99e7ddfb938d266200347`.
+- Canonical hosted verification passed on that exact implementation head:
+  push run `27643147108` and pull-request run `27643148489` both completed
+  successfully on macOS. PR #13 remained open, clean, and mergeable, and the
+  branch had no open code-scanning alerts.

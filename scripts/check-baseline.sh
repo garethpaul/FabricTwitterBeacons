@@ -572,7 +572,9 @@ required = (
     "accepted URL mutation failed",
     "hostile URL mutation failed",
     "plan evidence mutation failed",
-    "hosted pull-request check",
+    "6b62a4e33010c9f64ae99e7ddfb938d266200347",
+    "push run `27643147108`",
+    "pull-request run `27643148489`",
 )
 if (
     re.findall(r"^status: .+$", frontmatter, flags=re.MULTILINE) != ["status: completed"]
