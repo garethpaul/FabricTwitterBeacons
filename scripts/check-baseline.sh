@@ -161,9 +161,13 @@ if any(tests.count(fragment) != 1 for fragment in test_contract):
 PY
 
 for signal_cleanup_plan_contract in \
-  "status: planned" \
+  "status: completed" \
+  "## Status: Completed" \
   'exit-only signal traps leave `tweet-permalink-policy-tests.*` behind' \
-  "success, compiler failure, and bounded termination"; do
+  "success, compiler failure, and bounded termination" \
+  "284056cd451bc3ef2093c87392bd40d9a8461435" \
+  "27746852183" \
+  "27746853979"; do
   if ! grep -Fq "$signal_cleanup_plan_contract" "$TWEET_PERMALINK_SIGNAL_PLAN"; then
     printf '%s\n' "Tweet permalink harness signal-cleanup plan must retain evidence: $signal_cleanup_plan_contract" >&2
     exit 1
