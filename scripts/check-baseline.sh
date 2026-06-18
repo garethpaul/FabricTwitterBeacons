@@ -20,6 +20,7 @@ TWEET_PERMALINK_PLAN="$ROOT_DIR/docs/plans/2026-06-13-tweet-permalink-validation
 TWEET_PERMALINK_HOST_PLAN="$ROOT_DIR/docs/plans/2026-06-15-twitter-permalink-host-boundary.md"
 TWEET_PERMALINK_HOST_CHECK="$ROOT_DIR/scripts/check-twitter-permalink-host-boundary.py"
 TWEET_PERMALINK_EXECUTION_PLAN="$ROOT_DIR/docs/plans/2026-06-16-executable-tweet-permalink-policy-tests.md"
+TWEET_PERMALINK_SIGNAL_PLAN="$ROOT_DIR/docs/plans/2026-06-18-tweet-permalink-harness-signal-cleanup.md"
 DEVICE_VERIFICATION_PLAN="$ROOT_DIR/docs/plans/2026-06-13-device-beacon-twitter-verification.md"
 TWITTER_MAIN_QUEUE_PLAN="$ROOT_DIR/docs/plans/2026-06-13-twitter-main-queue-publication.md"
 VIEW_APPEARANCE_PLAN="$ROOT_DIR/docs/plans/2026-06-13-view-appearance-lifecycle-consolidation.md"
@@ -73,6 +74,7 @@ for path in \
   "docs/plans/2026-06-13-tweet-permalink-validation.md" \
   "docs/plans/2026-06-15-twitter-permalink-host-boundary.md" \
   "docs/plans/2026-06-16-executable-tweet-permalink-policy-tests.md" \
+  "docs/plans/2026-06-18-tweet-permalink-harness-signal-cleanup.md" \
   "scripts/check-twitter-permalink-host-boundary.py" \
   "scripts/run-tweet-permalink-policy-tests.sh" \
   "Tests/TweetPermalinkPolicyTests/main.swift" \
@@ -103,6 +105,7 @@ python3 "$TWITTER_SEARCH_PARSE_BOUNDARY_CHECK" \
 python3 - "$PROJECT" "$MAKEFILE" \
   "$ROOT_DIR/scripts/run-tweet-permalink-policy-tests.sh" \
   "$ROOT_DIR/Tests/TweetPermalinkPolicyTests/main.swift" <<'PY'
+import re
 import sys
 from pathlib import Path
 
@@ -122,6 +125,20 @@ runner_contract = (
 )
 if any(runner.count(fragment) != 1 for fragment in runner_contract):
     raise SystemExit("Tweet permalink runner must compile production policy with bounded cleanup")
+signal_handler = re.compile(
+    r'''handle_signal\(\) \{\s*'''
+    r'''status=\$1\s*'''
+    r'''trap - 0 1 2 15\s*'''
+    r'''cleanup\s*'''
+    r'''exit "\$status"\s*'''
+    r'''\}'''
+)
+if not signal_handler.search(runner):
+    raise SystemExit("Tweet permalink runner signals must clean temporary output before exiting")
+for signal, status in ((1, 129), (2, 130), (15, 143)):
+    binding = f"trap 'handle_signal {status}' {signal}"
+    if runner.count(binding) != 1:
+        raise SystemExit(f"Tweet permalink runner must retain signal binding: {binding}")
 test_contract = (
     'accepted: true, "Twitter host"',
     'accepted: true, "www Twitter host"',
@@ -142,6 +159,16 @@ test_contract = (
 if any(tests.count(fragment) != 1 for fragment in test_contract):
     raise SystemExit("Executable tweet permalink tests must preserve every accepted and hostile URL case")
 PY
+
+for signal_cleanup_plan_contract in \
+  "status: planned" \
+  'exit-only signal traps leave `tweet-permalink-policy-tests.*` behind' \
+  "success, compiler failure, and bounded termination"; do
+  if ! grep -Fq "$signal_cleanup_plan_contract" "$TWEET_PERMALINK_SIGNAL_PLAN"; then
+    printf '%s\n' "Tweet permalink harness signal-cleanup plan must retain evidence: $signal_cleanup_plan_contract" >&2
+    exit 1
+  fi
+done
 
 if ! grep -Fq "status: completed" "$TWITTER_SEARCH_PARSE_BOUNDARY_PLAN" ||
   ! grep -Fq "hostile mutations were rejected" "$TWITTER_SEARCH_PARSE_BOUNDARY_PLAN" ||
