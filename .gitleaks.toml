@@ -1,0 +1,22 @@
+title = "FabricTwitterBeacons credential guard"
+
+[extend]
+useDefault = true
+
+[[rules]]
+id = "fabric-credential-literal"
+description = "Fabric credential-shaped literal in credential-related context"
+regex = '''(?i)(?:Fabric\.framework/run|fabric[_ -]?(?:api[_ -]?key|build[_ -]?secret)|fabric_(?:api|secret))[^\r\n]{0,160}(?:[0-9a-f]{64}|[0-9a-f]{40})'''
+keywords = ["fabric"]
+
+[[rules]]
+id = "fabric-credential-fragments"
+description = "Fabric credential reconstructed from adjacent string fragments"
+regex = '''(?i)fabric_(?:api|secret)\s*=\s*["'][0-9a-f]+["'][^\r\n]{0,128}["'][0-9a-f]+["']'''
+keywords = ["fabric_"]
+
+[[rules]]
+id = "fabric-project-secret-detector"
+description = "Credential-shaped literal embedded in a project-file detector"
+regex = '''grep\s+-Fq\s+["'][0-9a-fA-F]{40,64}["']\s+["']\$PROJECT["']'''
+keywords = ["grep"]

@@ -34,29 +34,50 @@ Current baseline:
 - Twitter diagnostics avoid usernames, tweet IDs, and raw client error details.
 - Malformed Twitter search JSON completes with an empty result instead of
   force-unwrapping the response body.
+- Twitter search JSON parsing requires HTTP 200 and at most 1 MiB of response
+  data before parsing begins.
 - Twitter search transport failures complete with empty results so
   beacon-triggered callers can skip tweet loading consistently.
 - Malformed Twitter REST JSON fails closed without force-unwrapping the legacy
   helper response body.
 - Beacon-triggered tweet loading skips empty search results and prevents
   overlapping guest tweet-load requests.
+- Active beacon generations are reserved before Twitter search dispatch so repeated
+  ranging or refresh events cannot launch duplicate Twitter request chains.
 - Pending guest login and tweet-load callbacks are discarded when the beacon
   screen is hidden or immediate proximity ends.
+- Queued hidden-screen ranging callbacks return before search begins.
 - Loaded TwitterKit tweet responses are type-checked before replacing the
   visible table contents, avoiding force-cast crashes and duplicate stale rows.
+- Search, guest-login, and tweet-load callbacks publish controller and table
+  state on the main queue after the applicable stale beacon-context check.
+- A beacon generation token scopes search and tweet-load callbacks to one
+  close-range session across leave-and-return transitions.
+- Published tweets are cleared and the existing waiting presentation is
+  restored when that close-beacon context is lost.
+- One `viewWillAppear` override owns visible-use ranging and logo animation.
+- Tweet selection validates credential-free HTTPS permalinks on
+  canonical Twitter and X hosts with no explicit port before in-app navigation.
+- The canonical permalink predicate is shared by the app target and an
+  executable standalone Swift behavioral harness.
 - Local `.env` and `.xcconfig` files stay ignored because they may contain
   Fabric, Twitter, signing, or beacon configuration.
 - Xcode project listing is attempted when `xcodebuild` is installed; otherwise
   static checks remain the minimum verification path.
 - GitHub Actions runs the local baseline and Xcode project parse on a fixed
-  macOS runner for pushes, pull requests, and manual dispatches.
+  macOS runner for pushes, pull requests, and manual dispatches without
+  persisting checkout credentials.
+- A physical-device checklist now covers when-in-use authorization,
+  visible-screen ranging, proximity transitions, bounded Twitter loads, stale
+  callbacks, permalink navigation, privacy failures, cleanup, and redacted
+  evidence without claiming that the checklist has been executed.
 
 Next priorities:
 
-- Add clearer README verification steps for beacon and Twitter behavior
 - Move beacon and Twitter configuration into documented local settings
 - Modernize Fabric/Twitter dependencies only in a dedicated pass
-- Add tests or manual checklists around rate limits and proximity handling
+- Add executable rate-limit, lifecycle, and proximity integration tests after
+  the retired dependencies can be isolated or replaced
 
 Contribution rules:
 

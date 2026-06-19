@@ -7,7 +7,7 @@
 
 `garethpaul/FabricTwitterBeacons` is an Apple platform application or Objective-C/Swift sample. Tweets based on physical proximity to iBeacons. 
 
-This README is based on the checked-in source, manifests, scripts, and repository metadata on the `master` branch. The project language mix found during review was: C/C++ headers (21), Swift (12).
+This README is based on the checked-in source, manifests, scripts, and repository metadata on the `master` branch. The project language mix found during review was: C/C++ headers (21), Swift (14).
 
 ## Repository Contents
 
@@ -35,6 +35,7 @@ Additional scan context:
 
 - Git
 - macOS with Xcode for building Apple platform projects
+- Gitleaks for the fail-closed credential scan
 
 ### Setup
 
@@ -59,6 +60,14 @@ Run the repository baseline:
 make check
 ```
 
+When `swiftc` is available, every Make gate first compiles and executes the
+production tweet-permalink policy against canonical and hostile URLs. The same
+source is compiled into the app target; the legacy XCTest target remains
+template-only and is not treated as behavioral evidence.
+
+The Makefile resolves repository paths from its own location, so
+`make -f /absolute/path/to/Makefile check` also works from another directory.
+
 The baseline verifies that Fabric credentials are not committed, raw beacon
 payloads and account-specific Twitter details are not logged, local credential
 files stay ignored, the app `Info.plist` carries location usage copy for beacon
@@ -70,16 +79,45 @@ project can be listed when `xcodebuild` is installed.
 Loaded TwitterKit tweet objects are type-checked before replacing the visible
 table contents, so unexpected response objects do not crash the table or append
 duplicate stale rows.
+Selected tweet permalinks are opened only when they are credential-free HTTPS
+URLs on canonical Twitter and X hosts with no explicit port; exact host matching
+rejects subdomain and suffix lookalikes, and rejected link details are not logged.
+That production decision is shared with the standalone executable Swift harness
+instead of being reimplemented only in a static checker.
 Guest login and tweet-load callbacks recheck that the beacon screen is visible
 and the user remains immediately close before starting or displaying results,
 so stale asynchronous responses cannot repopulate the table after context ends.
+A beacon generation token also prevents callbacks from an earlier leave-and-
+return cycle from publishing into a newer close-range session.
+Losing the active close beacon clears already-published tweets and restores the
+existing waiting label and spinner without rerunning full view setup.
+Queued ranging callbacks return before Twitter search when the beacon screen is
+already hidden.
+Search, guest-login, and tweet-load callbacks publish controller and table
+state only on the main queue, with the stale-context check preceding successful
+tweet visibility.
+The controller uses one `viewWillAppear` lifecycle override for both visible-use
+beacon ranging and the existing navigation-logo animation.
 GitHub Actions runs this same `make check` baseline on a fixed `macos-15`
 runner for pushes, pull requests, and manual dispatches. The job pins checkout
-by commit, uses read-only repository permissions, and exercises the
-`xcodebuild -list` project parse without Fabric or Twitter credentials.
+by commit, uses read-only repository permissions, does not persist checkout
+credentials, and exercises the `xcodebuild -list` project parse without Fabric
+or Twitter credentials.
 
-For functional verification, use Xcode's test action or `xcodebuild test` with
-the appropriate scheme and destination.
+For functional verification, follow
+[`docs/manual-beacon-twitter-verification.md`](docs/manual-beacon-twitter-verification.md)
+on a signed physical device with tester-controlled beacon hardware, account
+configuration, and public test content. The checklist is defined but was not
+executed by this Linux maintenance session; hosted project listing is not
+physical-device runtime evidence.
+
+The credential gate also compares candidate values against non-reversible
+SHA-256 fingerprints in `config/fabric-credential-fingerprints.sha256` and
+tests contextual, fragmented, binary, and missing-tool failure modes with:
+
+```bash
+./tests/test-secret-guard.sh
+```
 
 When the required SDK or runtime is unavailable, use static checks and source review first, then verify on a machine that has the matching platform toolchain.
 
@@ -87,6 +125,10 @@ When the required SDK or runtime is unavailable, use static checks and source re
 
 - Detected references to Twitter. Keep API keys, OAuth credentials, tokens, and account-specific values in local configuration only.
 - Keep `FABRIC_API_KEY`, `FABRIC_BUILD_SECRET`, Twitter credentials, signing identities, and local `.xcconfig` files out of source control.
+- Supply Fabric values only through local environment variables or an ignored
+  machine-local configuration file. The checked-in project intentionally uses
+  inert variable placeholders and skips the legacy upload phase when values are
+  absent.
 - Keep the checked-in app `Info.plist` limited to bundle metadata and reviewed
   privacy usage descriptions; do not add secrets to it.
 - Request only when-in-use location access, start ranging after authorization,
@@ -96,18 +138,33 @@ When the required SDK or runtime is unavailable, use static checks and source re
   response details from beacon-triggered flows.
 - Beacon-triggered tweet loading skips empty search results and suppresses
   overlapping guest tweet-load requests.
+- Search results must contain dictionary-shaped entries with unique positive
+  ASCII-decimal `id_str` values of at most 20 digits; parsing stops after 20
+  accepted IDs.
+- Leaving the beacon screen clears all beacon-scoped tweets and waiting state
+  before a future ranging cycle can publish content.
+- Selected tweet links must use a canonical Twitter/X host and a canonical
+  `/<username>/status/<positive-decimal-id>` path.
+- The active beacon generation is reserved before Twitter search dispatch, so
+  repeated ranging or refresh events cannot start duplicate search chains.
 - Beacon-triggered authentication and loaded results are discarded if the
   screen is hidden or immediate proximity ends while callbacks are pending.
 - Loaded TwitterKit tweet responses are type-checked before replacing the
   visible table contents.
 - Malformed Twitter search JSON completes with an empty result instead of
   force-unwrapping the response body.
+- Twitter search JSON parsing requires HTTP 200 and at most 1 MiB of response
+  data; rejected responses complete with an empty result.
 - Twitter search transport failures complete with empty results so
   beacon-triggered callers can skip tweet loading consistently.
 - Malformed Twitter REST JSON in the legacy REST helper fails closed instead of
   force-unwrapping the response body.
 
 ## Security and Privacy Notes
+
+- Historical Fabric deployment credentials remain recoverable from public Git
+  objects. Revoke or rotate them (or delete the retired provider apps) and
+  review provider activity; repository cleanup does not invalidate credentials.
 
 - Review changes touching authentication or token handling; examples from the scan include TwitterKit.framework/Versions/A/Headers/DGTAuthenticateButton.h, TwitterKit.framework/Versions/A/Headers/DGTSession.h, TwitterKit.framework/Versions/A/Headers/Digits.h, TwitterKit.framework/Versions/A/Headers/TWTRAPIErrorCode.h, and 6 more.
 - Review changes touching external API calls or credential-adjacent configuration; examples from the scan include Fabric.framework/Versions/A/Headers/Fabric.h, Fabric.framework/Versions/A/Resources/Info.plist, TwitterKit.framework/Versions/A/Headers/DGTAuthenticateButton.h, TwitterKit.framework/Versions/A/Headers/DGTConstants.h, and 6 more.
@@ -130,6 +187,15 @@ When the required SDK or runtime is unavailable, use static checks and source re
   tweet table replacement behavior.
 - See `docs/plans/2026-06-10-ci-baseline.md` for the hosted GitHub Actions
   baseline.
+- See `docs/plans/2026-06-12-root-independent-makefile.md` for the portable
+  Makefile verification contract.
+- See `docs/plans/2026-06-13-tweet-permalink-validation.md` for the in-app tweet
+  navigation boundary.
+- See `docs/plans/2026-06-15-twitter-permalink-host-boundary.md` for the exact
+  Twitter/X host and default-port navigation boundary.
+- See `docs/manual-beacon-twitter-verification.md` for the physical-device
+  authorization, ranging, proximity, Twitter, stale-result, permalink, privacy,
+  cleanup, and redacted-evidence checklist.
 
 ## Contributing
 

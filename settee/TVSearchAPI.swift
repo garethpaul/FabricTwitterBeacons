@@ -10,6 +10,25 @@
 import Foundation
 import TwitterKit
 
+let TwitterSearchResponseMaxBytes = 1024 * 1024
+let TwitterSearchResultMaxCount = 20
+
+func acceptsTwitterSearchResponse(response: NSURLResponse?, data: NSData?) -> Bool {
+    if let httpResponse = response as? NSHTTPURLResponse {
+        if httpResponse.statusCode != 200 {
+            return false
+        }
+    } else {
+        return false
+    }
+
+    if let responseData = data {
+        return responseData.length <= TwitterSearchResponseMaxBytes
+    }
+
+    return false
+}
+
 func Search(completion: (result: [String]) -> Void) {
 
     // setup some type aliases to handle regular wording for JSON type objects
@@ -46,14 +65,15 @@ func Search(completion: (result: [String]) -> Void) {
                     (response, data, connectionError) -> Void in
                     if (connectionError == nil) {
 
-                        // Setup a tweet array to contain all of those juicy tweets
-                        var tweetArray = Array<String>()
-
-                        if data == nil {
-                            println("Twitter search response missing data")
+                        if !acceptsTwitterSearchResponse(response, data: data) {
+                            println("Twitter search response was rejected")
                             completion(result: [])
                             return
                         }
+
+                        // Setup a tweet array to contain all of those juicy tweets
+                        var tweetArray = Array<String>()
+                        var seenTweetIDs = Dictionary<String, Bool>()
 
                         var jsonError : NSError?
                         let json : AnyObject? =
@@ -73,10 +93,19 @@ func Search(completion: (result: [String]) -> Void) {
 
                                 // For each tweet in the status block of the json request e.g. {"statuses": [tweets.........
                                 for tweet in statuses {
-                                    if let id = tweet["id_str"] as?String{
+                                    if let tweetDictionary = tweet as? JSONDictionary {
+                                        if let id = tweetDictionary["id_str"] as? String {
+                                            if isCanonicalTweetID(id) {
+                                                if seenTweetIDs[id] == nil {
+                                                    seenTweetIDs[id] = true
+                                                    tweetArray.append(id)
+                                                }
+                                            }
+                                        }
+                                    }
 
-                                        // Append the Tweet to the array
-                                        tweetArray.append(id)
+                                    if tweetArray.count == TwitterSearchResultMaxCount {
+                                        break
                                     }
                                 }
                             }
@@ -87,7 +116,7 @@ func Search(completion: (result: [String]) -> Void) {
                         }
 
                         // complete this magical request
-                        completion(result: limitTweetIDs(tweetArray, maxCount: 20))
+                        completion(result: limitTweetIDs(tweetArray, maxCount: TwitterSearchResultMaxCount))
                     }
 
 
