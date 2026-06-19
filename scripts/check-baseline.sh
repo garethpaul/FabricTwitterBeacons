@@ -76,12 +76,7 @@ if ! grep -Fq "locationManager.requestWhenInUseAuthorization()" "$ROOT_DIR/sette
   exit 1
 fi
 
-if grep -Fq "abb870ac2c6cd77fc0a3ee166f786a86748f4eb9" "$PROJECT" ||
-  grep -Fq "47d331d25396fd56e08c5c5891c16a003ba5647e584bf8fc07feb0e8ae92ab92" "$PROJECT" ||
-  grep -Eq './Fabric\.framework/run [0-9a-f]{32,}' "$PROJECT"; then
-  printf '%s\n' "Fabric run script must not contain committed Fabric credentials." >&2
-  exit 1
-fi
+"$ROOT_DIR/scripts/check-no-committed-fabric-secrets.sh" "$ROOT_DIR"
 
 if ! grep -Fq "FABRIC_API_KEY" "$PROJECT" ||
   ! grep -Fq "FABRIC_BUILD_SECRET" "$PROJECT" ||

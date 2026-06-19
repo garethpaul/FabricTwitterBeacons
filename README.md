@@ -35,6 +35,7 @@ Additional scan context:
 
 - Git
 - macOS with Xcode for building Apple platform projects
+- Gitleaks for the fail-closed credential scan
 
 ### Setup
 
@@ -78,6 +79,14 @@ runner for pushes, pull requests, and manual dispatches. The job pins checkout
 by commit, uses read-only repository permissions, and exercises the
 `xcodebuild -list` project parse without Fabric or Twitter credentials.
 
+The credential gate also compares candidate values against non-reversible
+SHA-256 fingerprints in `config/fabric-credential-fingerprints.sha256` and
+tests contextual, fragmented, binary, and missing-tool failure modes with:
+
+```bash
+./tests/test-secret-guard.sh
+```
+
 For functional verification, use Xcode's test action or `xcodebuild test` with
 the appropriate scheme and destination.
 
@@ -87,6 +96,10 @@ When the required SDK or runtime is unavailable, use static checks and source re
 
 - Detected references to Twitter. Keep API keys, OAuth credentials, tokens, and account-specific values in local configuration only.
 - Keep `FABRIC_API_KEY`, `FABRIC_BUILD_SECRET`, Twitter credentials, signing identities, and local `.xcconfig` files out of source control.
+- Supply Fabric values only through local environment variables or an ignored
+  machine-local configuration file. The checked-in project intentionally uses
+  inert variable placeholders and skips the legacy upload phase when values are
+  absent.
 - Keep the checked-in app `Info.plist` limited to bundle metadata and reviewed
   privacy usage descriptions; do not add secrets to it.
 - Request only when-in-use location access, start ranging after authorization,

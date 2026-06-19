@@ -62,6 +62,17 @@ visible.
 
 Dependency updates should come from trusted package managers and should keep lockfiles in sync when lockfiles exist. Do not commit credentials, private keys, tokens, generated secrets, or machine-local configuration. If a vulnerability depends on a compromised package, typosquatting risk, insecure transitive dependency, or unsafe build step, include the package name, affected version, and the path through which it is used.
 
+## Historical Credential Incident
+
+Fabric deployment credentials were committed historically and remain
+recoverable from public Git history. Their revocation or expiry is not
+confirmed. Treat them as compromised and manually rotate or revoke them in the
+associated Fabric, Firebase, or successor project without attempting
+authentication with the exposed values. The repository guard prevents the
+known values, credential-shaped Fabric literals, and adjacent-fragment
+reconstruction from being added to the current tree; it does not remove
+historical objects or prove revocation.
+
 ## Safe Research Guidelines
 
 Good-faith research is welcome when it stays within these boundaries:
