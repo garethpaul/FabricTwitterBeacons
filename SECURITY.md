@@ -54,3 +54,7 @@ Good-faith research is welcome when it stays within these boundaries:
 ## Maintainer Response
 
 The maintainer will review complete reports as availability allows, prioritize issues by exploitability and impact, and coordinate a fix or mitigation when the affected code is still maintained. For sample, archived, or educational repositories, the likely remediation may be documentation, dependency updates, or clearly marking unsupported code rather than a production-style patch release.
+
+## Historical Credential Incident
+
+Fabric deployment credentials were committed historically and remain recoverable from public Git history. Their revocation or expiry is not confirmed. Treat them as compromised and manually rotate or revoke them in the associated Fabric, Firebase, or successor project without attempting authentication with the exposed values. The repository guard prevents credential-shaped Fabric literals and adjacent-fragment reconstruction from being added to the current tree; it does not remove historical objects or prove revocation.

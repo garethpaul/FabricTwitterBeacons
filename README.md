@@ -50,6 +50,7 @@ The setup commands above are derived from repository files. Legacy mobile, Pytho
 ## Testing and Verification
 
 - Xcode's test action or `xcodebuild test` with the appropriate scheme and destination
+- Install Gitleaks, then run `./tests/test-secret-guard.sh` to verify the fail-closed credential scanner and its generated fixtures.
 
 When the required SDK or runtime is unavailable, use static checks and source review first, then verify on a machine that has the matching platform toolchain.
 
@@ -58,6 +59,7 @@ When the required SDK or runtime is unavailable, use static checks and source re
 - Detected references to Twitter. Keep API keys, OAuth credentials, tokens, and account-specific values in local configuration only.
 - The Xcode Fabric run script reads `FABRIC_API_KEY` and `FABRIC_BUILD_SECRET` from the developer environment.
 - Do not commit real Fabric, Twitter, signing, or provisioning credentials. Rotate any value that was previously committed to this repository.
+- Historical Fabric credentials remain recoverable from public Git history. Their revocation or expiry is not confirmed; the associated Fabric, Firebase, or successor project must be checked and the values manually rotated or revoked without attempting authentication with the exposed values.
 
 ## Security and Privacy Notes
 
