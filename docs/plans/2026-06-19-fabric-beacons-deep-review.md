@@ -1,6 +1,6 @@
 # Fabric Twitter Beacons Deep Review
 
-## Status: In progress
+## Status: Completed
 
 ## Scope
 
@@ -36,6 +36,11 @@ permalink navigation, privacy configuration, and hosted CI.
   screen-hide reset, status-path validation, and checkout credential persistence.
 - `make check`, Xcode project parsing, hosted Check, and hosted CodeQL provide
   the final merge evidence.
+
+Local and external-root `make check` passed. Hosted Check and CodeQL passed on
+aggregate PR #15 at the reviewed head. A current Xcode build reached project
+evaluation but correctly failed because the archival target has no supported
+`SWIFT_VERSION` and targets iOS 8.1, which current Xcode no longer supports.
 
 ## Residual risk
 
