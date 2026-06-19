@@ -12,7 +12,7 @@ keywords = ["fabric"]
 [[rules]]
 id = "fabric-credential-fragments"
 description = "Fabric credential reconstructed from adjacent string fragments"
-regex = '''(?i)fabric_(?:api|secret)\s*=\s*["'][0-9a-f]{6,}["']["'][0-9a-f]{6,}["']'''
+regex = '''(?i)fabric_(?:api|secret)\s*=\s*["'][0-9a-f]+["'][^\r\n]{0,128}["'][0-9a-f]+["']'''
 keywords = ["fabric_"]
 
 [[rules]]

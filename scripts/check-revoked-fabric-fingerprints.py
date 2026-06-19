@@ -7,7 +7,10 @@ from pathlib import Path
 
 
 HEX_RUN = re.compile(rb"[0-9a-fA-F]{40,}")
+QUOTED_HEX = re.compile(rb'''["']([0-9a-fA-F]+)["']''')
 FINGERPRINT = re.compile(r"[0-9a-f]{64}")
+MAX_FRAGMENT_GAP = 256
+MAX_RECONSTRUCTED_LENGTH = 128
 
 
 def load_fingerprints(path: Path) -> set[str]:
@@ -21,12 +24,27 @@ def load_fingerprints(path: Path) -> set[str]:
     return fingerprints
 
 
+def windows(run: bytes, start: int):
+    for length in (40, 64):
+        for offset in range(0, len(run) - length + 1):
+            yield start + offset, run[offset : offset + length]
+
+
 def candidate_values(data: bytes):
     for match in HEX_RUN.finditer(data):
-        run = match.group()
-        for length in (40, 64):
-            for offset in range(0, len(run) - length + 1):
-                yield match.start() + offset, run[offset : offset + length]
+        yield from windows(match.group(), match.start())
+    fragments = list(QUOTED_HEX.finditer(data))
+    for index, first in enumerate(fragments):
+        run = first.group(1)
+        previous_end = first.end()
+        for following in fragments[index + 1 :]:
+            if following.start() - previous_end > MAX_FRAGMENT_GAP:
+                break
+            run += following.group(1)
+            if len(run) > MAX_RECONSTRUCTED_LENGTH:
+                break
+            yield from windows(run, first.start())
+            previous_end = following.end()
 
 
 def files_under(path: Path):

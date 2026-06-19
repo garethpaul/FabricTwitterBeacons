@@ -40,10 +40,23 @@ fi
 
 fragment_fixture="$tmp_dir/fragments"
 mkdir -p "$fragment_fixture"
-printf 'fabric_api="%s""%s"\n' "${api_key:0:32}" "${api_key:32}" > "$fragment_fixture/check.sh"
-printf 'fabric_secret="%s""%s"\n' "${build_secret:0:56}" "${build_secret:56}" >> "$fragment_fixture/check.sh"
-if run_guard "$fragment_fixture"; then
+printf 'value_one="%s""%s"\n' "${api_key:0:38}" "${api_key:38}" > "$fragment_fixture/check.sh"
+printf 'value_two="%s""%s"\n' "${build_secret:0:58}" "${build_secret:58}" >> "$fragment_fixture/check.sh"
+fragment_fingerprints="$tmp_dir/fragment-fingerprints.sha256"
+printf '%s\n' \
+  "$(printf %s "$api_key" | shasum -a 256 | cut -d' ' -f1)" \
+  "$(printf %s "$build_secret" | shasum -a 256 | cut -d' ' -f1)" \
+  > "$fragment_fingerprints"
+if FABRIC_FINGERPRINTS_FILE="$fragment_fingerprints" run_guard "$fragment_fixture"; then
   fail "adjacent credential fragments were accepted"
+fi
+
+separated_fragment_fixture="$tmp_dir/separated-fragments"
+mkdir -p "$separated_fragment_fixture"
+printf 'value_one="%s" + /* join */ "%s"\n' "${api_key:0:38}" "${api_key:38}" > "$separated_fragment_fixture/check.txt"
+printf 'value_two="%s" # join\n  "%s"\n' "${build_secret:0:58}" "${build_secret:58}" >> "$separated_fragment_fixture/check.txt"
+if FABRIC_FINGERPRINTS_FILE="$fragment_fingerprints" run_guard "$separated_fragment_fixture"; then
+  fail "operator or comment-separated credential fragments were accepted"
 fi
 
 bare_fixture="$tmp_dir/bare"
@@ -67,8 +80,20 @@ fi
 
 missing_gitleaks_fixture="$tmp_dir/missing-gitleaks"
 mkdir -p "$missing_gitleaks_fixture/bin" "$missing_gitleaks_fixture/tree"
-if PATH="$missing_gitleaks_fixture/bin:/usr/bin:/bin" "$guard" "$missing_gitleaks_fixture/tree" >/dev/null 2>&1; then
+ln -s "$(command -v bash)" "$missing_gitleaks_fixture/bin/bash"
+ln -s "$(command -v dirname)" "$missing_gitleaks_fixture/bin/dirname"
+if PATH="$missing_gitleaks_fixture/bin" "$guard" "$missing_gitleaks_fixture/tree" >/dev/null 2>&1; then
   fail "guard passed without Gitleaks"
+fi
+
+ln -s "$(command -v gitleaks)" "$missing_gitleaks_fixture/bin/gitleaks"
+if PATH="$missing_gitleaks_fixture/bin" "$guard" "$missing_gitleaks_fixture/tree" >/dev/null 2>&1; then
+  fail "guard passed without Python 3"
+fi
+
+ln -s "$(command -v python3)" "$missing_gitleaks_fixture/bin/python3"
+if PATH="$missing_gitleaks_fixture/bin" "$guard" "$missing_gitleaks_fixture/tree" >/dev/null 2>&1; then
+  fail "guard passed without shasum"
 fi
 
 if run_guard "$tmp_dir/does-not-exist"; then
