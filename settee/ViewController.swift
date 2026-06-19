@@ -31,7 +31,8 @@ class ViewController: UITableViewController, CLLocationManagerDelegate, TWTRTwee
 
     let tweetTableCellReuseIdentifier = "TweetCell"
 
-    var isLoadingTweets = false
+    var loadingTweetContextGeneration: Int?
+    var beaconTweetContextGeneration = 0
     var isBeaconScreenVisible = false
     var prev: Int?
 
@@ -93,6 +94,7 @@ class ViewController: UITableViewController, CLLocationManagerDelegate, TWTRTwee
 
     override func viewWillDisappear(animated: Bool) {
         super.viewWillDisappear(animated)
+        resetBeaconTweetPresentation()
         isBeaconScreenVisible = false
         locationManager.stopRangingBeaconsInRegion(region)
     }
@@ -103,75 +105,133 @@ class ViewController: UITableViewController, CLLocationManagerDelegate, TWTRTwee
         if CLLocationManager.authorizationStatus() == CLAuthorizationStatus.Authorized {
             locationManager.startRangingBeaconsInRegion(region)
         }
+
+        // Animate the logo when the view appears.
+        UIView.animateWithDuration(0.6, delay: 0, usingSpringWithDamping: 0.5, initialSpringVelocity: 0.8, options: .CurveEaseInOut, animations: { () -> Void in
+            self.lView.frame.origin.y = 22
+            }, completion: nil)
     }
 
     func locationManager(manager: CLLocationManager!, didChangeAuthorizationStatus status: CLAuthorizationStatus) {
         if status == CLAuthorizationStatus.Authorized && isBeaconScreenVisible {
             manager.startRangingBeaconsInRegion(region)
         } else {
+            if prev == 1 {
+                resetBeaconTweetPresentation()
+            }
             manager.stopRangingBeaconsInRegion(region)
         }
     }
 
-    func hasActiveBeaconTweetContext() -> Bool {
-        return isBeaconScreenVisible && prev == 1
+    func invalidateBeaconTweetContext() {
+        beaconTweetContextGeneration += 1
+        prev = nil
     }
 
-    func loadTweets(tweetIDs: [String]) {
-        if tweetIDs.isEmpty {
+    func resetBeaconTweetPresentation() {
+        invalidateBeaconTweetContext()
+        self.tweets = []
+
+        if label.superview == nil {
+            self.view.addSubview(label)
+        }
+
+        if activityIndicator.superview == nil {
+            activityIndicator.startAnimating()
+            self.view.addSubview(activityIndicator)
+        }
+    }
+
+    func hasActiveBeaconTweetContext(contextGeneration: Int) -> Bool {
+        return isBeaconScreenVisible && prev == 1 && contextGeneration == beaconTweetContextGeneration
+    }
+
+    func finishLoadingTweets(contextGeneration: Int) {
+        if loadingTweetContextGeneration == contextGeneration {
+            loadingTweetContextGeneration = nil
+        }
+    }
+
+    func requestTweetsForContext(contextGeneration: Int) {
+        if !self.hasActiveBeaconTweetContext(contextGeneration) {
             return
         }
 
-        if !self.hasActiveBeaconTweetContext() {
+        if self.loadingTweetContextGeneration == contextGeneration {
             return
         }
 
-        // Do not trigger another request if one is already in progress.
-        if self.isLoadingTweets {
-            return
-        }
-
-        self.isLoadingTweets = true
-
-        // load tweets with guest login
-        Twitter.sharedInstance().logInGuestWithCompletion { (session: TWTRGuestSession!, error: NSError!) in
-            if session == nil {
-                self.isLoadingTweets = false
-                println("Twitter guest login failed")
-                return
-            }
-
-            if !self.hasActiveBeaconTweetContext() {
-                self.isLoadingTweets = false
-                return
-            }
-
-            // Find the tweets with the tweetIDs
-            Twitter.sharedInstance().APIClient.loadTweetsWithIDs(tweetIDs) {
-                (twttrs, error) -> Void in
-                self.isLoadingTweets = false
-
-                if !self.hasActiveBeaconTweetContext() {
+        self.loadingTweetContextGeneration = contextGeneration
+        Search() { (result: [String]) in
+            dispatch_async(dispatch_get_main_queue()) {
+                if !self.hasActiveBeaconTweetContext(contextGeneration) {
+                    self.finishLoadingTweets(contextGeneration)
                     return
                 }
 
-                // If there are tweets do something magical
-                if let loadedTweetObjects = twttrs {
+                if result.isEmpty {
+                    self.finishLoadingTweets(contextGeneration)
+                    return
+                }
 
-                    var loadedTweets: [TWTRTweet] = []
-                    // Only display typed TwitterKit tweet objects from the response.
-                    for i in loadedTweetObjects {
-                        // Append the Tweet to the Tweets to display in the table view.
-                        if let tweet = i as? TWTRTweet {
-                            loadedTweets.append(tweet)
+                self.loadTweets(result, contextGeneration: contextGeneration)
+            }
+        }
+    }
+
+    func loadTweets(tweetIDs: [String], contextGeneration: Int) {
+        if tweetIDs.isEmpty {
+            self.finishLoadingTweets(contextGeneration)
+            return
+        }
+
+        if !self.hasActiveBeaconTweetContext(contextGeneration) {
+            self.finishLoadingTweets(contextGeneration)
+            return
+        }
+
+        // load tweets with guest login
+        Twitter.sharedInstance().logInGuestWithCompletion { (session: TWTRGuestSession!, error: NSError!) in
+            dispatch_async(dispatch_get_main_queue()) {
+                if session == nil {
+                    self.finishLoadingTweets(contextGeneration)
+                    println("Twitter guest login failed")
+                    return
+                }
+
+                if !self.hasActiveBeaconTweetContext(contextGeneration) {
+                    self.finishLoadingTweets(contextGeneration)
+                    return
+                }
+
+                // Find the tweets with the tweetIDs
+                Twitter.sharedInstance().APIClient.loadTweetsWithIDs(tweetIDs) {
+                    (twttrs, error) -> Void in
+                    dispatch_async(dispatch_get_main_queue()) {
+                        self.finishLoadingTweets(contextGeneration)
+
+                        if !self.hasActiveBeaconTweetContext(contextGeneration) {
+                            return
+                        }
+
+                        // If there are tweets do something magical
+                        if let loadedTweetObjects = twttrs {
+
+                            var loadedTweets: [TWTRTweet] = []
+                            // Only display typed TwitterKit tweet objects from the response.
+                            for i in loadedTweetObjects {
+                                // Append the Tweet to the Tweets to display in the table view.
+                                if let tweet = i as? TWTRTweet {
+                                    loadedTweets.append(tweet)
+                                }
+                            }
+
+                            self.tweets = loadedTweets
+                        } else {
+                            println("Twitter tweet load failed")
                         }
                     }
-
-                    self.tweets = loadedTweets
-                } else {
-                    println("Twitter tweet load failed")
                 }
-                
             }
         }
         
@@ -186,7 +246,14 @@ class ViewController: UITableViewController, CLLocationManagerDelegate, TWTRTwee
 
     // This is where all the magic happens for determing whether to render the Tweets
     func locationManager(manager: CLLocationManager!, didRangeBeacons beacons: [AnyObject]!, inRegion region: CLBeaconRegion!) {
+        if !isBeaconScreenVisible {
+            return
+        }
+
         if beacons == nil {
+            if prev == 1 {
+                resetBeaconTweetPresentation()
+            }
             return
         }
 
@@ -199,9 +266,17 @@ class ViewController: UITableViewController, CLLocationManagerDelegate, TWTRTwee
 
             // If the proximity does not equal the prev value set the user has become closer or further away from the beacon
             if prev != closestBeacon.proximity.rawValue {
+                let previousProximity = prev
+
+                if previousProximity == 1 && proximity != 1 {
+                    resetBeaconTweetPresentation()
+                }
+
+                prev = proximity
 
                 // If the proximity is very close - we should show some TV tweets
                 if (proximity == 1){
+                    let contextGeneration = beaconTweetContextGeneration
 
                     // Create a single prototype cell for height calculations.
                     self.prototypeCell = TWTRTweetTableViewCell(style: .Default, reuseIdentifier: tweetTableCellReuseIdentifier)
@@ -209,40 +284,11 @@ class ViewController: UITableViewController, CLLocationManagerDelegate, TWTRTwee
                     // Register the identifier for TWTRTweetTableViewCell.
                     self.tableView.registerClass(TWTRTweetTableViewCell.self, forCellReuseIdentifier: tweetTableCellReuseIdentifier)
 
-                    // Send a request to the Search API. Check out TVSearchAPI.swift for details..
-                    Search() { (result: [String]) in
-
-                        // Load the array back to display the Tweets
-                        self.loadTweets(result)
-                    }
+                    // Reserve this beacon context before starting the Twitter search.
+                    self.requestTweetsForContext(contextGeneration)
 
 
                 }
-
-                // If the proximity is further away.
-                else if proximity == 2 {
-
-                    // If the previous value was 1 aka close then we need to start again remove the tweets and wait for the 
-                    // user to come back in range.
-                    if prev == 1 {
-
-                        // remove the Label from View
-                        label.removeFromSuperview()
-
-                        // remove the activityIndication from the View
-                        activityIndicator.removeFromSuperview()
-
-                        // Lets set an empty array for the tweets
-                        self.tweets = []
-
-                        // Get going and setup the View Again
-                        setupView()
-                    }
-                }
-
-                // set previous value
-                prev = proximity
-
 
             }
 
@@ -260,25 +306,34 @@ class ViewController: UITableViewController, CLLocationManagerDelegate, TWTRTwee
                 label.removeFromSuperview()
 
             }
+        } else if prev == 1 {
+            resetBeaconTweetPresentation()
         }
     }
 
 
     func refreshInvoked() {
-        // Trigger a load for the most recent Tweets.
-        Search() { (result: [String]) in
-            self.loadTweets(result)
+        let contextGeneration = beaconTweetContextGeneration
+        if !self.hasActiveBeaconTweetContext(contextGeneration) {
+            return
         }
+
+        // Trigger a load for the most recent Tweets.
+        self.requestTweetsForContext(contextGeneration)
     }
 
     // MARK: TWTRTweetViewDelegate
     func tweetView(tweetView: TWTRTweetView!, didSelectTweet tweet: TWTRTweet!) {
-        // Display a Web View when selecting the Tweet.
-        let webViewController = UIViewController()
-        let webView = UIWebView(frame: webViewController.view.bounds)
-        webView.loadRequest(NSURLRequest(URL: tweet.permalink))
-        webViewController.view = webView
-        self.navigationController?.pushViewController(webViewController, animated: true)
+        if let permalink = validatedTweetPermalink(tweet?.permalink) {
+            // Display a Web View when selecting a validated Tweet permalink.
+            let webViewController = UIViewController()
+            let webView = UIWebView(frame: webViewController.view.bounds)
+            webView.loadRequest(NSURLRequest(URL: permalink))
+            webViewController.view = webView
+            self.navigationController?.pushViewController(webViewController, animated: true)
+        } else {
+            println("Tweet permalink was rejected")
+        }
     }
     
 
@@ -320,16 +375,6 @@ class ViewController: UITableViewController, CLLocationManagerDelegate, TWTRTwee
         } else {
             return self.tableView.estimatedRowHeight
         }
-    }
-
-    override func viewWillAppear(animated: Bool) {
-        super.viewWillAppear(animated)
-
-        // Animate the logo when the view appears.
-        UIView.animateWithDuration(0.6, delay: 0, usingSpringWithDamping: 0.5, initialSpringVelocity: 0.8, options: .CurveEaseInOut, animations: { () -> Void in
-            // Place the frame at the correct origin position.
-            self.lView.frame.origin.y = 22
-            }, completion: nil)
     }
 
     override func viewDidAppear(animated: Bool) {

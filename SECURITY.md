@@ -33,8 +33,11 @@ Helpful reports include:
 - Review found database, model, query, or persistence-related code; changes in those areas should receive security-focused review before merge.
 - No primary dependency manifest was detected in the repository root. If dependencies are added later, include a manifest and prefer reproducible installation instructions.
 - GitHub Actions runs `make check` and the Xcode project parse on a fixed macOS
-  runner with pinned checkout, read-only repository access, and no Fabric or
-  Twitter credentials.
+  runner with pinned checkout, read-only repository access, no persisted checkout
+  credentials, and no Fabric or Twitter credentials.
+- The canonical tweet-permalink predicate is compiled into the app target and
+  executed by the standalone Swift harness, so the tested security decision is
+  production source rather than a duplicated test implementation.
 
 ## Mobile Privacy Notes
 
@@ -44,8 +47,13 @@ Beacon ranging should use only when-in-use location authorization, should not
 start before authorization is granted, and should stop when its screen is no
 longer visible.
 
+The beacon controller should keep visible-use ranging and logo animation in one
+`viewWillAppear` override so the lifecycle compiles and both behaviors remain ordered.
+
 Twitter search and legacy REST JSON parsing should fail closed without
 force-unwrapping malformed response bodies or logging account-specific details.
+Twitter search JSON parsing additionally requires HTTP 200 and at most 1 MiB of
+response data before the parser is invoked.
 
 Twitter search transport failures should complete with empty results so
 beacon-triggered tweet loading does not wait on a failed request path.
@@ -54,13 +62,55 @@ Loaded TwitterKit tweet responses should be type-checked before updating the
 visible table so malformed response objects do not crash the beacon-triggered
 display path or duplicate stale rows.
 
+Twitter search entries must be dictionaries with unique positive ASCII-decimal
+tweet IDs no longer than 20 digits. Stop after 20 accepted IDs so malformed or
+oversized provider collections cannot widen the downstream request.
+
+Selected tweet permalinks should require credential-free HTTPS URLs on
+canonical Twitter and X hosts with no explicit port before any in-app web
+request or navigation is created. Exact host matching must reject subdomain and
+suffix lookalikes, and the path must be a canonical
+`/<username>/status/<positive-decimal-id>` permalink.
+
 Beacon-triggered Twitter callbacks should recheck visible-screen and immediate
 proximity context before authentication continues or loaded tweets become
 visible.
 
+Each close-range session should carry a beacon generation token through search,
+login, and load callbacks so an older leave-and-return cycle cannot publish.
+Reserve that generation before Twitter search dispatch so repeated ranging or refresh
+events cannot launch duplicate Twitter request chains.
+Published tweets are cleared when the close-beacon context is lost or the
+beacon screen hides so stale account-derived content does not remain visible
+outside a freshly verified ranging context.
+
+Hidden-screen ranging callbacks must not start Twitter search after ranging is
+stopped for view disappearance.
+
+Twitter search, login, and load callback state plus visible table publication
+should occur on the main queue, with stale beacon context rejected before tweet
+assignment.
+
+Runtime beacon/Twitter claims require the signed physical-device checklist in
+`docs/manual-beacon-twitter-verification.md`, tester-controlled hardware and
+accounts, and redacted evidence. Static checks and hosted project listing do not
+prove authorization, ranging, proximity, Twitter, or navigation behavior.
+
 ## Dependency and Supply Chain Security
 
 Dependency updates should come from trusted package managers and should keep lockfiles in sync when lockfiles exist. Do not commit credentials, private keys, tokens, generated secrets, or machine-local configuration. If a vulnerability depends on a compromised package, typosquatting risk, insecure transitive dependency, or unsafe build step, include the package name, affected version, and the path through which it is used.
+
+## Historical Credential Incident
+
+Fabric deployment credentials were committed historically and remain
+recoverable from public Git history. Their revocation or expiry is not
+confirmed. Treat them as compromised and manually rotate or revoke them in the
+associated Fabric, Firebase, or successor project without attempting
+authentication with the exposed values, then review provider activity for
+unexpected use. The repository guard prevents the
+known values, credential-shaped Fabric literals, and adjacent-fragment
+reconstruction from being added to the current tree; it does not remove
+historical objects or prove revocation.
 
 ## Safe Research Guidelines
 

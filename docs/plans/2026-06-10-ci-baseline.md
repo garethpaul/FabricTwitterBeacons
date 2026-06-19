@@ -12,8 +12,9 @@ requests.
 
 - Added a GitHub Actions workflow on the supported `macos-15` runner that runs
   `make check` and its conditional `xcodebuild -list` project parse.
-- Pinned checkout by commit, granted read-only repository access, enabled
-  stale-run cancellation, and limited the job to ten minutes.
+- Pinned checkout by commit, disabled checkout credential persistence, granted
+  read-only repository access, enabled stale-run cancellation, and limited the
+  job to ten minutes.
 - Kept hosted checks offline and free of Fabric, Twitter, signing, or beacon
   credentials.
 - Extended the baseline script and documentation so the hosted CI path stays
