@@ -227,10 +227,10 @@ if ! grep -Fq "Queued ranging callbacks return before Twitter search" "$ROOT_DIR
   exit 1
 fi
 
-if ! grep -Fq 'ROOT := $(abspath $(dir $(lastword $(MAKEFILE_LIST))))' "$MAKEFILE" ||
+if ! grep -Fq 'override ROOT := $(abspath $(dir $(lastword $(MAKEFILE_LIST))))' "$MAKEFILE" ||
   ! grep -Fq 'CHECK_SCRIPT := $(ROOT)/scripts/check-baseline.sh' "$MAKEFILE" ||
   ! grep -Fq '"$(CHECK_SCRIPT)"' "$MAKEFILE"; then
-  printf '%s\n' "Makefile must resolve and run the baseline independently of the caller directory." >&2
+  printf '%s\n' "Makefile must protect, resolve, and run the baseline independently of the caller directory." >&2
   exit 1
 fi
 

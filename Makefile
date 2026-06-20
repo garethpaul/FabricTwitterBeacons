@@ -1,4 +1,4 @@
-ROOT := $(abspath $(dir $(lastword $(MAKEFILE_LIST))))
+override ROOT := $(abspath $(dir $(lastword $(MAKEFILE_LIST))))
 CHECK_SCRIPT := $(ROOT)/scripts/check-baseline.sh
 SWIFTC ?= swiftc
 
