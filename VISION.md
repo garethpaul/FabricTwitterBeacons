@@ -56,6 +56,8 @@ Current baseline:
 - Published tweets are cleared and the existing waiting presentation is
   restored when that close-beacon context is lost.
 - One `viewWillAppear` override owns visible-use ranging and logo animation.
+- UIKit owns lifecycle callbacks; refresh and reset behavior uses explicit helpers
+  instead of manually invoking those callbacks.
 - Tweet selection validates credential-free HTTPS permalinks on
   canonical Twitter and X hosts with no explicit port before in-app navigation.
 - The canonical permalink predicate is shared by the app target and an

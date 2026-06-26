@@ -46,7 +46,9 @@ private tweets, request/response bodies, signing material, or unredacted logs.
 5. Navigate away or background/hide the beacon screen. Confirm ranging stops and
    no hidden-screen callback starts or displays Twitter results.
 6. Return to the visible beacon screen while still authorized. Confirm ranging
-   resumes without another permission escalation.
+   resumes without another permission escalation or duplicated waiting, spinner,
+   or navigation-logo views. Refresh and reset behavior must use explicit helpers
+   rather than manually invoking UIKit lifecycle callbacks.
 
 ## Proximity And Tweet Loading
 

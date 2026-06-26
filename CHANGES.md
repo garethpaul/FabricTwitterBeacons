@@ -1,5 +1,68 @@
 # Changes
 
+## 2026-06-25 18:59 PDT - P2 - Remove manual UIKit lifecycle invocation
+
+### Summary
+
+Removed an unused refresh method that directly invoked UIKit lifecycle
+callbacks and could duplicate controller setup if called. Added a fail-closed
+source contract and synchronized lifecycle ownership guidance.
+
+### Work completed
+
+- Added an accepted design and implementation plan for framework-owned UIKit
+  lifecycle callbacks.
+- Observed `make check` fail on the existing `refreshView()` method before
+  removing it.
+- Removed the unsafe manual `viewDidLoad()` and `viewWillAppear(true)` calls.
+- Added static and documentation contracts that direct reset behavior to
+  explicit helpers.
+
+### Threads
+
+- Started: None — completed directly because the change was narrow and
+  self-contained.
+- Continued: None.
+- Stopped: None.
+
+### Files changed
+
+- `settee/ViewController.swift` — removed the unused unsafe refresh method.
+- `scripts/check-baseline.sh` — rejects manual lifecycle invocation and requires
+  synchronized guidance.
+- `README.md`, `SECURITY.md`, `VISION.md`, and `AGENTS.md` — document
+  framework-owned lifecycle callbacks.
+- `docs/manual-beacon-twitter-verification.md` — checks for duplicated setup
+  after leaving and returning to the screen.
+- `docs/plans/2026-06-25-view-lifecycle-manual-invocation-design.md` and
+  `docs/plans/2026-06-25-view-lifecycle-manual-invocation.md` — record the
+  decision and implementation steps.
+
+### Validation
+
+- `make check` — passed after the intended pre-fix failure.
+- `make lint`, `make test`, and `make build` — passed; `swiftc` and
+  `xcodebuild` were unavailable and their platform checks skipped truthfully.
+- `python3 -m py_compile scripts/*.py` and shell syntax checks — passed.
+- Three isolated hostile source mutations — rejected `func refreshView`,
+  `self.viewDidLoad()`, and `self.viewWillAppear(true)`.
+- `git diff --check` — passed.
+
+### Bugs / findings
+
+- P2: `refreshView()` modeled UIKit callbacks as ordinary refresh functions,
+  which could duplicate setup, authorization, ranging, and animation if used.
+
+### Blockers
+
+- Local Swift compilation and Xcode project parsing are unavailable; hosted
+  macOS CI remains the authoritative platform validation.
+
+### Next action
+
+- Open the focused PR, review the exact head, and merge only after hosted checks
+  pass.
+
 ## 2026-06-19
 
 - Removed the known Fabric credential values from the maintained PR stack and
