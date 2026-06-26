@@ -179,6 +179,26 @@ class ViewController: UITableViewController, CLLocationManagerDelegate, TWTRTwee
         }
     }
 
+    func publishLoadedTweets(loadedTweets: [TWTRTweet]) {
+        self.tweets = loadedTweets
+
+        if loadedTweets.isEmpty {
+            if label.superview == nil {
+                self.view.addSubview(label)
+            }
+
+            if activityIndicator.superview == nil {
+                activityIndicator.startAnimating()
+                self.view.addSubview(activityIndicator)
+            }
+            return
+        }
+
+        activityIndicator.stopAnimating()
+        activityIndicator.removeFromSuperview()
+        label.removeFromSuperview()
+    }
+
     func loadTweets(tweetIDs: [String], contextGeneration: Int) {
         if tweetIDs.isEmpty {
             self.finishLoadingTweets(contextGeneration)
@@ -226,7 +246,7 @@ class ViewController: UITableViewController, CLLocationManagerDelegate, TWTRTwee
                                 }
                             }
 
-                            self.tweets = loadedTweets
+                            self.publishLoadedTweets(loadedTweets)
                         } else {
                             println("Twitter tweet load failed")
                         }
@@ -292,20 +312,6 @@ class ViewController: UITableViewController, CLLocationManagerDelegate, TWTRTwee
 
             }
 
-
-            // if the tweets have been loaded
-            if (tweets.count >= 1) {
-
-                // Stop animating the spinner
-                activityIndicator.stopAnimating()
-
-                // Remove the spinner
-                activityIndicator.removeFromSuperview()
-
-                // Remove the label
-                label.removeFromSuperview()
-
-            }
         } else if prev == 1 {
             resetBeaconTweetPresentation()
         }

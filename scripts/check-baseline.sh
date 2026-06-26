@@ -28,6 +28,7 @@ VIEW_LIFECYCLE_INVOCATION_DESIGN="$ROOT_DIR/docs/plans/2026-06-25-view-lifecycle
 VIEW_LIFECYCLE_INVOCATION_PLAN="$ROOT_DIR/docs/plans/2026-06-25-view-lifecycle-manual-invocation.md"
 ORPHANED_WAITING_CONTROLLER_DESIGN="$ROOT_DIR/docs/plans/2026-06-26-orphaned-waiting-controller-design.md"
 ORPHANED_WAITING_CONTROLLER_PLAN="$ROOT_DIR/docs/plans/2026-06-26-orphaned-waiting-controller.md"
+TWEET_PUBLICATION_PRESENTATION_PLAN="$ROOT_DIR/docs/plans/2026-06-26-tweet-publication-presentation.md"
 HIDDEN_RANGING_PLAN="$ROOT_DIR/docs/plans/2026-06-13-hidden-ranging-callback-guard.md"
 BEACON_CONTEXT_GENERATION_PLAN="$ROOT_DIR/docs/plans/2026-06-14-beacon-context-generation.md"
 STALE_PRESENTATION_PLAN="$ROOT_DIR/docs/plans/2026-06-14-stale-beacon-presentation-reset.md"
@@ -94,6 +95,7 @@ for path in \
   "docs/plans/2026-06-25-view-lifecycle-manual-invocation.md" \
   "docs/plans/2026-06-26-orphaned-waiting-controller-design.md" \
   "docs/plans/2026-06-26-orphaned-waiting-controller.md" \
+  "docs/plans/2026-06-26-tweet-publication-presentation.md" \
   "docs/plans/2026-06-13-hidden-ranging-callback-guard.md" \
   "docs/plans/2026-06-14-beacon-context-generation.md" \
   "docs/plans/2026-06-14-stale-beacon-presentation-reset.md" \
@@ -434,6 +436,25 @@ if source.count("Search()") != 1 or source.count("self.requestTweetsForContext(c
 load_start = source.find("func loadTweets(tweetIDs: [String], contextGeneration: Int)")
 load_end = source.find("override func didReceiveMemoryWarning()", load_start)
 load = source[load_start:load_end]
+publication_start = source.find("func publishLoadedTweets(loadedTweets: [TWTRTweet])")
+publication_end = source.find("func loadTweets", publication_start)
+publication = source[publication_start:publication_end]
+publication_contract = (
+    "self.tweets = loadedTweets",
+    "if loadedTweets.isEmpty",
+    "if label.superview == nil",
+    "self.view.addSubview(label)",
+    "if activityIndicator.superview == nil",
+    "activityIndicator.startAnimating()",
+    "self.view.addSubview(activityIndicator)",
+    "return",
+    "activityIndicator.stopAnimating()",
+    "activityIndicator.removeFromSuperview()",
+    "label.removeFromSuperview()",
+)
+positions = [publication.find(item) for item in publication_contract]
+if publication_start == -1 or publication_end == -1 or -1 in positions or positions != sorted(positions):
+    raise SystemExit("Typed tweet publication must own ordered waiting presentation cleanup")
 
 required_load = (
     "if tweetIDs.isEmpty",
@@ -448,7 +469,7 @@ required_load = (
     "dispatch_async(dispatch_get_main_queue())",
     "self.finishLoadingTweets(contextGeneration)",
     "if !self.hasActiveBeaconTweetContext(contextGeneration)",
-    "self.tweets = loadedTweets",
+    "self.publishLoadedTweets(loadedTweets)",
 )
 positions = []
 start = 0
@@ -462,6 +483,8 @@ if -1 in positions:
 range_start = source.find("func locationManager(manager: CLLocationManager!, didRangeBeacons")
 range_end = source.find("func refreshInvoked()", range_start)
 ranging = source[range_start:range_end]
+if "activityIndicator.stopAnimating()" in ranging or "label.removeFromSuperview()" in ranging:
+    raise SystemExit("Ranging callbacks must not own successful tweet publication cleanup")
 refresh_end = source.find("// MARK: TWTRTweetViewDelegate", range_end)
 refresh = source[range_end:refresh_end]
 
@@ -517,7 +540,7 @@ if source.count("invalidateBeaconTweetContext()") != 2 or source.count(
     raise SystemExit("Beacon context must reset on hide and all four active-context loss paths")
 if source.count("dispatch_async(dispatch_get_main_queue())") != 3 or load.count(
     "dispatch_async(dispatch_get_main_queue())"
-) != 2 or load.count("self.tweets = loadedTweets") != 1:
+) != 2 or load.count("self.publishLoadedTweets(loadedTweets)") != 1:
     raise SystemExit("Twitter callbacks must retain three main-queue boundaries and one publication")
 
 generation = 0
@@ -532,6 +555,19 @@ if ! grep -Fq "status: completed" "$TWITTER_SEARCH_RESERVATION_PLAN" ||
   ! grep -Fq "make check" "$TWITTER_SEARCH_RESERVATION_PLAN" ||
   ! grep -Fq "hostile mutations were rejected" "$TWITTER_SEARCH_RESERVATION_PLAN"; then
   printf '%s\n' "Twitter search reservation plan must record completed verification." >&2
+  exit 1
+fi
+
+if ! grep -Fq "Status: Completed" "$TWEET_PUBLICATION_PRESENTATION_PLAN" || \
+   ! grep -Fq "Hide the waiting label and spinner immediately" "$TWEET_PUBLICATION_PRESENTATION_PLAN" || \
+   ! grep -Fq "does not depend on another physical beacon event" "$TWEET_PUBLICATION_PRESENTATION_PLAN" || \
+   ! grep -Fq "Five isolated mutations were rejected" "$TWEET_PUBLICATION_PRESENTATION_PLAN"; then
+  printf '%s\n' "Tweet publication presentation plan must preserve the ownership decision." >&2
+  exit 1
+fi
+
+if ! grep -Fq "no additional ranging callback arrives" "$DEVICE_VERIFICATION"; then
+  printf '%s\n' "Device verification must cover immediate tweet publication cleanup." >&2
   exit 1
 fi
 

@@ -91,6 +91,8 @@ A beacon generation token also prevents callbacks from an earlier leave-and-
 return cycle from publishing into a newer close-range session.
 Losing the active close beacon clears already-published tweets and restores the
 existing waiting label and spinner without rerunning full view setup.
+Successful typed-tweet publication removes that waiting label and spinner in
+the same main-queue callback instead of depending on a later ranging event.
 Queued ranging callbacks return before Twitter search when the beacon screen is
 already hidden.
 Search, guest-login, and tweet-load callbacks publish controller and table

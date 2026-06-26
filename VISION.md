@@ -55,6 +55,8 @@ Current baseline:
   close-range session across leave-and-return transitions.
 - Published tweets are cleared and the existing waiting presentation is
   restored when that close-beacon context is lost.
+- Successful typed-tweet publication removes waiting UI without another
+  ranging callback.
 - One `viewWillAppear` override owns visible-use ranging and logo animation.
 - UIKit owns lifecycle callbacks; refresh and reset behavior uses explicit helpers
   instead of manually invoking those callbacks.

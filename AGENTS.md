@@ -66,6 +66,8 @@
 - Clear already-published tweets and restore the existing waiting UI when the
   active close-beacon context is lost; ranging callbacks must not rerun full
   controller setup.
+- Successful typed-tweet publication must hide the waiting label and spinner on
+  the main queue without waiting for another ranging callback.
 - Hosted macOS CI proves the Xcode project parses and the static contracts pass; it does not prove signing, Fabric/Twitter authentication, beacon ranging, or physical-device behavior.
 - Use `docs/manual-beacon-twitter-verification.md` for physical-device verification. Preserve its when-in-use authorization, visible-screen ranging, immediate-only loading, stale-result, bounded load, permalink, privacy, cleanup, redacted-evidence, and unexecuted-status boundaries.
 

@@ -58,6 +58,8 @@ private tweets, request/response bodies, signing material, or unredacted logs.
    the controlled beacon reaches immediate proximity.
 3. Enter immediate proximity. Confirm one bounded search/load begins and the
    visible table is replaced only with successfully loaded TwitterKit tweets.
+   Confirm the waiting label and spinner disappear with that publication even
+   if no additional ranging callback arrives after the network response.
 4. Keep the device at immediate proximity across repeated ranging callbacks.
    Confirm overlapping guest/tweet loads do not start.
 5. Move from immediate to near proximity after rows are visible. Confirm stale
