@@ -26,6 +26,8 @@ TWITTER_MAIN_QUEUE_PLAN="$ROOT_DIR/docs/plans/2026-06-13-twitter-main-queue-publ
 VIEW_APPEARANCE_PLAN="$ROOT_DIR/docs/plans/2026-06-13-view-appearance-lifecycle-consolidation.md"
 VIEW_LIFECYCLE_INVOCATION_DESIGN="$ROOT_DIR/docs/plans/2026-06-25-view-lifecycle-manual-invocation-design.md"
 VIEW_LIFECYCLE_INVOCATION_PLAN="$ROOT_DIR/docs/plans/2026-06-25-view-lifecycle-manual-invocation.md"
+ORPHANED_WAITING_CONTROLLER_DESIGN="$ROOT_DIR/docs/plans/2026-06-26-orphaned-waiting-controller-design.md"
+ORPHANED_WAITING_CONTROLLER_PLAN="$ROOT_DIR/docs/plans/2026-06-26-orphaned-waiting-controller.md"
 HIDDEN_RANGING_PLAN="$ROOT_DIR/docs/plans/2026-06-13-hidden-ranging-callback-guard.md"
 BEACON_CONTEXT_GENERATION_PLAN="$ROOT_DIR/docs/plans/2026-06-14-beacon-context-generation.md"
 STALE_PRESENTATION_PLAN="$ROOT_DIR/docs/plans/2026-06-14-stale-beacon-presentation-reset.md"
@@ -90,6 +92,8 @@ for path in \
   "docs/plans/2026-06-13-view-appearance-lifecycle-consolidation.md" \
   "docs/plans/2026-06-25-view-lifecycle-manual-invocation-design.md" \
   "docs/plans/2026-06-25-view-lifecycle-manual-invocation.md" \
+  "docs/plans/2026-06-26-orphaned-waiting-controller-design.md" \
+  "docs/plans/2026-06-26-orphaned-waiting-controller.md" \
   "docs/plans/2026-06-13-hidden-ranging-callback-guard.md" \
   "docs/plans/2026-06-14-beacon-context-generation.md" \
   "docs/plans/2026-06-14-stale-beacon-presentation-reset.md" \
@@ -305,8 +309,8 @@ if grep -Fq "println(beacons)" "$ROOT_DIR/settee/AppDelegate.swift"; then
   exit 1
 fi
 
-if grep -Fq "println(String(proximity))" "$ROOT_DIR/settee/WaitingController.swift"; then
-  printf '%s\n' "Beacon proximity transitions must not be logged." >&2
+if [ -e "$ROOT_DIR/settee/WaitingController.swift" ]; then
+  printf '%s\n' "Orphaned WaitingController.swift must remain absent." >&2
   exit 1
 fi
 
@@ -335,9 +339,8 @@ if ! grep -Fiq "malformed Twitter search JSON" "$ROOT_DIR/README.md" ||
   exit 1
 fi
 
-beacon_nil_guards=$(grep -R "if beacons == nil" "$ROOT_DIR/settee" | wc -l | tr -d ' ')
-if [ "$beacon_nil_guards" -lt 2 ]; then
-  printf '%s\n' "Beacon ranging callbacks must guard missing beacon arrays." >&2
+if ! grep -Fq "if beacons == nil" "$ROOT_DIR/settee/ViewController.swift"; then
+  printf '%s\n' "The active beacon ranging callback must guard missing beacon arrays." >&2
   exit 1
 fi
 
@@ -833,6 +836,19 @@ if ! grep -Fq "## Status: Accepted" "$VIEW_LIFECYCLE_INVOCATION_DESIGN" ||
   ! grep -Fq "28212364799" "$VIEW_LIFECYCLE_INVOCATION_PLAN" ||
   ! grep -Fq "28212365061" "$VIEW_LIFECYCLE_INVOCATION_PLAN"; then
   printf '%s\n' "Manual lifecycle invocation plans must preserve the accepted design and completed evidence." >&2
+  exit 1
+fi
+
+if ! grep -Fq "## Status: Accepted" "$ORPHANED_WAITING_CONTROLLER_DESIGN" ||
+  ! grep -Fq 'Delete `settee/WaitingController.swift`' "$ORPHANED_WAITING_CONTROLLER_DESIGN" ||
+  ! grep -Fq "## Status: Completed" "$ORPHANED_WAITING_CONTROLLER_PLAN" ||
+  ! grep -Fq "stale aggregate assertion" "$ORPHANED_WAITING_CONTROLLER_PLAN" ||
+  ! grep -Fq 'Only the storyboard-backed `ViewController` owns beacon ranging' "$ROOT_DIR/README.md" ||
+  ! grep -Fq "Orphaned alternate beacon controllers must remain absent" "$ROOT_DIR/SECURITY.md" ||
+  ! grep -Fq "Keep orphaned alternate beacon controllers absent" "$ROOT_DIR/VISION.md" ||
+  ! grep -Fq "Keep orphaned alternate beacon controllers absent" "$ROOT_DIR/AGENTS.md" ||
+  ! grep -Fq 'orphaned `WaitingController`' "$ROOT_DIR/CHANGES.md"; then
+  printf '%s\n' "Orphaned waiting-controller removal evidence and guidance must remain synchronized." >&2
   exit 1
 fi
 
