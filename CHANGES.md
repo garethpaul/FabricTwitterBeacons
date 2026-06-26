@@ -1,5 +1,56 @@
 # Changes
 
+## 2026-06-26 10:22 PDT - P3 - Re-audit asynchronous Twitter state
+
+### Summary
+
+Re-audited beacon context generation, search reservation, guest login, tweet
+loading, main-queue publication, external navigation, and credential guards
+after the two latest presentation fixes. No new correctness or security change
+was justified.
+
+### Work completed
+
+- Confirmed stale search, login, and load callbacks cannot publish outside the
+  active visible beacon generation.
+- Confirmed an older callback cannot clear a newer generation's in-flight
+  reservation.
+- Confirmed empty or rejected typed results retain waiting presentation, while
+  non-empty publication owns immediate spinner and label cleanup.
+- Rechecked canonical HTTPS tweet permalink and committed-secret boundaries.
+
+### Threads
+
+- Started: asynchronous Twitter state audit — trace search through publication.
+- Continued: recent presentation ownership fixes — verified their interaction
+  with generation invalidation and refresh reservation.
+- Stopped: additional state-machine change — no reproducible failing boundary.
+
+### Files changed
+
+- `CHANGES.md` — records the audit evidence and no-change decision.
+
+### Validation
+
+- `make check` — passed search parse/result contracts, permalink policies,
+  credential fingerprint and leak scans, secret fixtures, and CI wiring.
+- `swiftc` and `xcodebuild` skipped because the local Linux runner does not
+  provide the Apple toolchain.
+
+### Bugs / findings
+
+- No new defect established beyond the already merged presentation fixes.
+
+### Blockers
+
+- Live Fabric/Twitter authentication and physical beacon timing remain
+  manual-device verification boundaries.
+
+### Next action
+
+- Preserve the current generation and publication ownership model until device
+  evidence establishes a failing callback or beacon transition.
+
 ## 2026-06-26 14:34 UTC - P1 - publish loaded tweet presentation atomically
 
 ### Summary
