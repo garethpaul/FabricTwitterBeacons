@@ -94,6 +94,9 @@ stopped for view disappearance.
 Twitter search, login, and load callback state plus visible table publication
 should occur on the main queue, with stale beacon context rejected before tweet
 assignment.
+Successful typed-tweet publication and waiting-overlay cleanup must remain in
+that same active callback; ranging events must not own network-result UI
+completion.
 
 Runtime beacon/Twitter claims require the signed physical-device checklist in
 `docs/manual-beacon-twitter-verification.md`, tester-controlled hardware and

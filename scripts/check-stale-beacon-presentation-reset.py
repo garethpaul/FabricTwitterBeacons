@@ -15,7 +15,9 @@ if source.count(helper_start) != 1:
 if source.count(handler_start) != 1 or source.count(handler_end) != 1:
     raise SystemExit("Beacon ranging callback boundaries must remain unique.")
 
-helper = source.split(helper_start, 1)[1].split("func loadTweets", 1)[0]
+helper = source.split(helper_start, 1)[1].split(
+    "func hasActiveBeaconTweetContext", 1
+)[0]
 handler = source.split(handler_start, 1)[1].split(handler_end, 1)[0]
 hide = source.split(hide_start, 1)[1].split(hide_end, 1)[0]
 

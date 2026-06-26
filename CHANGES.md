@@ -1,5 +1,39 @@
 # Changes
 
+## 2026-06-26 14:34 UTC - P1 - publish loaded tweet presentation atomically
+
+### Summary
+
+Successful typed-tweet publication now removes the waiting label and spinner in
+the same active main-queue callback instead of waiting for another physical
+beacon-ranging event.
+
+### Work completed
+
+- Added one typed-tweet publication helper that replaces table contents and
+  hides waiting UI only for non-empty typed results.
+- Removed successful-publication cleanup from `didRangeBeacons`.
+- Added ordered source contracts, synchronized lifecycle/privacy guidance, and
+  an implementation plan.
+
+### Validation
+
+- RED `make check` rejected the missing publication helper.
+- GREEN all local Make aliases, shell syntax, project/plist parsing, secret/CI
+  fixtures, and `git diff --check` pass.
+- Five isolated source mutations were rejected. Swift/Xcode remain hosted-only
+  on this runner, and hosted checks are still required.
+
+### Blockers
+
+- Fabric/Twitter authentication and physical beacon timing remain manual-device
+  verification boundaries.
+
+### Next action
+
+- Review the exact head and merge only after hosted macOS and CodeQL checks
+  pass.
+
 ## 2026-06-26 06:08 PDT - P2 - Remove orphaned always-on beacon controller
 
 ### Summary
