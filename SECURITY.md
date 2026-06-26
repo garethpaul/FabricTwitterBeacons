@@ -49,6 +49,8 @@ longer visible.
 
 The beacon controller should keep visible-use ranging and logo animation in one
 `viewWillAppear` override so the lifecycle compiles and both behaviors remain ordered.
+UIKit lifecycle callbacks are framework-owned and must not be invoked as manual
+refresh functions; use explicit helpers for presentation reset instead.
 
 Twitter search and legacy REST JSON parsing should fail closed without
 force-unwrapping malformed response bodies or logging account-specific details.

@@ -52,6 +52,8 @@
 - Ignore queued ranging callbacks after the beacon screen hides before any
   beacon inspection or Twitter search begins.
 - Keep visible-use beacon ranging and navigation-logo animation in one `viewWillAppear` override.
+- Treat UIKit lifecycle callbacks as framework-owned; use explicit helpers for
+  presentation refresh or reset instead of invoking lifecycle methods directly.
 - Treat iBeacon UUIDs and proximity behavior as sensitive physical-device configuration. Do not log beacon payloads or user proximity transitions without a reviewed need.
 - Do not log Twitter usernames, tweet IDs, raw API errors, or account-specific response details from beacon-triggered flows.
 - Beacon-triggered tweet loading must limit result IDs, skip empty searches, suppress overlapping guest loads, complete failures with empty results, require HTTP 200 and at most 1 MiB before search JSON parsing, fail closed on malformed JSON, and type-check loaded TwitterKit objects before replacing visible rows.

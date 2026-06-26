@@ -384,15 +384,4 @@ class ViewController: UITableViewController, CLLocationManagerDelegate, TWTRTwee
         self.navigationController?.navigationBar.translucent = true
     }
 
-    func refreshView(){
-        self.viewDidLoad()
-        self.viewWillAppear(true)
-    }
-
-
-
-
-
-
-
 }

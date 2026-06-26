@@ -24,6 +24,8 @@ TWEET_PERMALINK_SIGNAL_PLAN="$ROOT_DIR/docs/plans/2026-06-18-tweet-permalink-har
 DEVICE_VERIFICATION_PLAN="$ROOT_DIR/docs/plans/2026-06-13-device-beacon-twitter-verification.md"
 TWITTER_MAIN_QUEUE_PLAN="$ROOT_DIR/docs/plans/2026-06-13-twitter-main-queue-publication.md"
 VIEW_APPEARANCE_PLAN="$ROOT_DIR/docs/plans/2026-06-13-view-appearance-lifecycle-consolidation.md"
+VIEW_LIFECYCLE_INVOCATION_DESIGN="$ROOT_DIR/docs/plans/2026-06-25-view-lifecycle-manual-invocation-design.md"
+VIEW_LIFECYCLE_INVOCATION_PLAN="$ROOT_DIR/docs/plans/2026-06-25-view-lifecycle-manual-invocation.md"
 HIDDEN_RANGING_PLAN="$ROOT_DIR/docs/plans/2026-06-13-hidden-ranging-callback-guard.md"
 BEACON_CONTEXT_GENERATION_PLAN="$ROOT_DIR/docs/plans/2026-06-14-beacon-context-generation.md"
 STALE_PRESENTATION_PLAN="$ROOT_DIR/docs/plans/2026-06-14-stale-beacon-presentation-reset.md"
@@ -86,6 +88,8 @@ for path in \
   "docs/plans/2026-06-13-device-beacon-twitter-verification.md" \
   "docs/plans/2026-06-13-twitter-main-queue-publication.md" \
   "docs/plans/2026-06-13-view-appearance-lifecycle-consolidation.md" \
+  "docs/plans/2026-06-25-view-lifecycle-manual-invocation-design.md" \
+  "docs/plans/2026-06-25-view-lifecycle-manual-invocation.md" \
   "docs/plans/2026-06-13-hidden-ranging-callback-guard.md" \
   "docs/plans/2026-06-14-beacon-context-generation.md" \
   "docs/plans/2026-06-14-stale-beacon-presentation-reset.md" \
@@ -202,6 +206,9 @@ import sys
 from pathlib import Path
 
 source = Path(sys.argv[1]).read_text(encoding="utf-8")
+for forbidden in ("func refreshView", "self.viewDidLoad()", "self.viewWillAppear(true)"):
+    if forbidden in source:
+        raise SystemExit("UIKit lifecycle callbacks must not be exposed as manual refresh behavior: " + forbidden)
 start = source.find("func locationManager(manager: CLLocationManager!, didRangeBeacons")
 end = source.find("func refreshInvoked()", start)
 callback = source[start:end]
@@ -804,6 +811,28 @@ if ! grep -Fq 'one `viewWillAppear` lifecycle override' "$ROOT_DIR/README.md" ||
   ! grep -Fq 'Consolidated duplicate `viewWillAppear` overrides' "$ROOT_DIR/CHANGES.md" ||
   ! grep -Fq 'one `viewWillAppear` override' "$ROOT_DIR/AGENTS.md"; then
   printf '%s\n' "View appearance lifecycle documentation must remain synchronized." >&2
+  exit 1
+fi
+
+for lifecycle_document in \
+  "$ROOT_DIR/README.md" \
+  "$ROOT_DIR/SECURITY.md" \
+  "$ROOT_DIR/VISION.md" \
+  "$ROOT_DIR/AGENTS.md" \
+  "$DEVICE_VERIFICATION"; do
+  if ! grep -Fq "explicit helpers" "$lifecycle_document"; then
+    printf '%s\n' "$lifecycle_document must preserve framework-owned lifecycle guidance." >&2
+    exit 1
+  fi
+done
+
+if ! grep -Fq "## Status: Accepted" "$VIEW_LIFECYCLE_INVOCATION_DESIGN" ||
+  ! grep -Fq 'Remove `refreshView()`' "$VIEW_LIFECYCLE_INVOCATION_DESIGN" ||
+  ! grep -Fq "## Status: Completed" "$VIEW_LIFECYCLE_INVOCATION_PLAN" ||
+  ! grep -Fq "Three isolated hostile mutations" "$VIEW_LIFECYCLE_INVOCATION_PLAN" ||
+  ! grep -Fq "28212364799" "$VIEW_LIFECYCLE_INVOCATION_PLAN" ||
+  ! grep -Fq "28212365061" "$VIEW_LIFECYCLE_INVOCATION_PLAN"; then
+  printf '%s\n' "Manual lifecycle invocation plans must preserve the accepted design and completed evidence." >&2
   exit 1
 fi
 
