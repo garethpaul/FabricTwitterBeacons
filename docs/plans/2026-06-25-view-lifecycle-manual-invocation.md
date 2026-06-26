@@ -36,4 +36,3 @@
 - Run `make check`, `make lint`, `make test`, and `make build`.
 - Review the exact diff and hosted CI result.
 - Push a focused PR and merge only after review and green checks.
-

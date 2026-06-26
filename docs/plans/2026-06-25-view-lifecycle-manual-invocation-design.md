@@ -41,4 +41,3 @@ future refresh behavior uses explicit helpers instead of UIKit callbacks.
 - Remove the method and run every Make verification alias.
 - Confirm the source still has exactly one framework-owned `viewWillAppear`
   override and the existing presentation reset helper remains intact.
-
