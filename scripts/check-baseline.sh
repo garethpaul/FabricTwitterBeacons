@@ -828,8 +828,11 @@ done
 
 if ! grep -Fq "## Status: Accepted" "$VIEW_LIFECYCLE_INVOCATION_DESIGN" ||
   ! grep -Fq 'Remove `refreshView()`' "$VIEW_LIFECYCLE_INVOCATION_DESIGN" ||
-  ! grep -Fq "## Status: In Progress" "$VIEW_LIFECYCLE_INVOCATION_PLAN"; then
-  printf '%s\n' "Manual lifecycle invocation plans must preserve the accepted design and implementation status." >&2
+  ! grep -Fq "## Status: Completed" "$VIEW_LIFECYCLE_INVOCATION_PLAN" ||
+  ! grep -Fq "Three isolated hostile mutations" "$VIEW_LIFECYCLE_INVOCATION_PLAN" ||
+  ! grep -Fq "28212364799" "$VIEW_LIFECYCLE_INVOCATION_PLAN" ||
+  ! grep -Fq "28212365061" "$VIEW_LIFECYCLE_INVOCATION_PLAN"; then
+  printf '%s\n' "Manual lifecycle invocation plans must preserve the accepted design and completed evidence." >&2
   exit 1
 fi
 

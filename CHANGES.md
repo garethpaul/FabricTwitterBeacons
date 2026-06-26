@@ -37,6 +37,7 @@ source contract and synchronized lifecycle ownership guidance.
 - `docs/plans/2026-06-25-view-lifecycle-manual-invocation-design.md` and
   `docs/plans/2026-06-25-view-lifecycle-manual-invocation.md` — record the
   decision and implementation steps.
+- `CHANGES.md` — records the complete maintenance cycle and validation evidence.
 
 ### Validation
 
@@ -47,6 +48,13 @@ source contract and synchronized lifecycle ownership guidance.
 - Three isolated hostile source mutations — rejected `func refreshView`,
   `self.viewDidLoad()`, and `self.viewWillAppear(true)`.
 - `git diff --check` — passed.
+- Hosted macOS Check runs `28212364799` and `28212366285` — passed, including
+  production Swift policy compilation, baseline checks, Xcode project parsing,
+  and Gitleaks.
+- CodeQL run `28212365061` — passed for actions and Python analysis.
+- Codex review helper with `codex review --base origin/master` — blocked by
+  local OpenAI API authentication (HTTP 401); exact-head manual review removed
+  two trailing blank lines and found no remaining actionable findings.
 
 ### Bugs / findings
 
@@ -55,13 +63,12 @@ source contract and synchronized lifecycle ownership guidance.
 
 ### Blockers
 
-- Local Swift compilation and Xcode project parsing are unavailable; hosted
-  macOS CI remains the authoritative platform validation.
+- None for the patch. Local `swiftc`, `xcodebuild`, and Codex API authentication
+  remain unavailable, with hosted CI and exact-head manual review used instead.
 
 ### Next action
 
-- Open the focused PR, review the exact head, and merge only after hosted checks
-  pass.
+- Merge PR #17 after the final documentation-only head passes hosted checks.
 
 ## 2026-06-19
 
