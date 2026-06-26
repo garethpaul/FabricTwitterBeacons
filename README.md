@@ -100,6 +100,8 @@ The controller uses one `viewWillAppear` lifecycle override for both visible-use
 beacon ranging and the existing navigation-logo animation.
 UIKit owns controller lifecycle callbacks; presentation refreshes and resets
 must use explicit helpers rather than calling lifecycle methods directly.
+Only the storyboard-backed `ViewController` owns beacon ranging; obsolete
+alternate controllers with broader authorization behavior remain removed.
 GitHub Actions runs this same `make check` baseline on a fixed `macos-15`
 runner for pushes, pull requests, and manual dispatches. The job pins checkout
 by commit, uses read-only repository permissions, does not persist checkout

@@ -1,5 +1,81 @@
 # Changes
 
+## 2026-06-26 06:08 PDT - P2 - Remove orphaned always-on beacon controller
+
+### Summary
+
+Removed an unreachable legacy controller that still requested always-on
+location access and started beacon ranging without screen-lifecycle cleanup.
+The active storyboard-backed controller and app target were unchanged.
+
+### Work completed
+
+- Confirmed `settee/WaitingController.swift` had no storyboard, project-file,
+  source-phase, or code references.
+- Added an accepted design and completed implementation plan.
+- Added a fail-closed baseline contract requiring the orphaned `WaitingController`
+  to remain absent.
+- Deleted the obsolete source and narrowed the active callback nil-guard check
+  so it no longer relies on dead code.
+- Synchronized README, security, vision, and agent guidance.
+
+### Threads
+
+- Started: None — the reachability audit and deletion were narrow and
+  self-contained.
+- Continued: None.
+- Stopped: None.
+
+### Files changed
+
+- `settee/WaitingController.swift` — removed unreachable always-on location and
+  unmanaged ranging code.
+- `scripts/check-baseline.sh` — enforces absence and checks the active callback
+  directly.
+- `README.md`, `SECURITY.md`, `VISION.md`, and `AGENTS.md` — document the sole
+  maintained beacon-controller ownership boundary.
+- `docs/plans/2026-06-26-orphaned-waiting-controller-design.md` and
+  `docs/plans/2026-06-26-orphaned-waiting-controller.md` — record the decision,
+  implementation, and validation evidence.
+
+### Validation
+
+- RED `make check` — failed on the newly prohibited orphaned file.
+- First GREEN attempt — exposed and recorded a stale aggregate assertion that
+  counted the orphan's nil guard.
+- First full-gate attempt — caught a wrapped documentation marker; the marker
+  was made literal without changing the documented contract.
+- An extra shell-syntax sweep initially included `Fabric.framework/run`; file
+  inspection confirmed it is a vendored Mach-O executable, so maintained shell
+  validation was correctly limited to `scripts/*.sh` and `tests/*.sh`.
+- `scripts/check-baseline.sh` — passed after checking the active
+  `ViewController` callback directly.
+- `make check`, `make lint`, `make test`, `make build`, and external-directory
+  `make -f ... check` — passed; unavailable `swiftc` and `xcodebuild` checks
+  skipped truthfully.
+- Maintained shell syntax, isolated Python byte-compilation, and
+  `git diff --check` — passed.
+- Hostile orphan restoration and active nil-guard removal mutations — rejected.
+- Hosted CI and exact-head review remain pending before merge.
+
+### Bugs / findings
+
+- P2 privacy/maintainability: unreachable source retained broader location
+  authorization and unmanaged ranging behavior that conflicted with the active
+  safety model and could be accidentally restored to the target.
+- P2 test quality: the baseline's nil-guard count depended on the dead
+  controller instead of asserting the active callback directly.
+
+### Blockers
+
+- Local `swiftc` and `xcodebuild` availability still determine whether platform
+  checks execute; hosted macOS CI remains authoritative when they are absent.
+
+### Next action
+
+- Open the focused PR, run exact-head review and hosted checks, then merge if
+  the reviewed head remains green.
+
 ## 2026-06-25 18:59 PDT - P2 - Remove manual UIKit lifecycle invocation
 
 ### Summary
