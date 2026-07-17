@@ -133,6 +133,25 @@ if project.count("/* TweetPermalinkPolicy.swift */") != 3:
     raise SystemExit("TweetPermalinkPolicy project references must remain complete and unique")
 if makefile.count("scripts/run-tweet-permalink-policy-tests.sh") != 1:
     raise SystemExit("Every Make gate must invoke the executable tweet permalink tests once")
+check_recipe = re.search(r"^check:\n((?:\t.*\n)+)", makefile, re.M)
+if check_recipe is None:
+    raise SystemExit("Makefile must define a check recipe")
+suite_invocations = [
+    line
+    for line in check_recipe.group(1).splitlines()
+    if re.search(r"scripts/run-[a-z-]+-policy-tests\.sh", line)
+]
+if len(suite_invocations) < 2:
+    raise SystemExit(
+        "Make check must invoke each executable policy suite on its own recipe line"
+    )
+for invocation in suite_invocations[:-1]:
+    if not invocation.rstrip().endswith("&& \\"):
+        raise SystemExit(
+            "Make runs each recipe line in one shell without set -e, so a ';'-separated "
+            "policy suite invocation has its failure discarded; every executable policy "
+            "suite invocation but the last must be '&&'-chained: " + invocation.strip()
+        )
 runner_contract = (
     "-D EXECUTABLE_POLICY_TESTS",
     "settee/TweetPermalinkPolicy.swift",

@@ -1,5 +1,25 @@
 # Changes
 
+## 2026-07-17 01:05 PDT - P2 - Stop discarding tweet permalink policy suite failures
+
+### Summary
+
+`make check` invoked the two executable policy suites as a `;`-separated list
+inside a single `if` block. Make runs each recipe line in one `sh -c` without
+`set -e`, so the block exited with the status of only its last command: a
+failure of `run-tweet-permalink-policy-tests.sh` was discarded and only
+`run-twitter-search-policy-tests.sh` was load-bearing. The suites are
+`&&`-chained now, and the baseline enforces the chaining structurally so the
+regression cannot return silently.
+
+### Work completed
+
+- `&&`-chained the tweet permalink suite to the search suite in `make check`.
+- Added a baseline assertion that enumerates the policy suite invocations in the
+  `check` recipe and requires every one but the last to be `&&`-chained.
+- Verified the assertion is live (reverting to `;` is caught) and load-bearing
+  (deleting the assertion lets the `;` regression pass the whole gate).
+
 ## 2026-06-26 10:22 PDT - P3 - Re-audit asynchronous Twitter state
 
 ### Summary
