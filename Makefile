@@ -6,7 +6,7 @@ SWIFTC ?= swiftc
 
 check:
 	@if command -v "$(SWIFTC)" >/dev/null 2>&1; then \
-		SWIFTC="$(SWIFTC)" "$(ROOT)/scripts/run-tweet-permalink-policy-tests.sh"; \
+		SWIFTC="$(SWIFTC)" "$(ROOT)/scripts/run-tweet-permalink-policy-tests.sh" && \
 		SWIFTC="$(SWIFTC)" "$(ROOT)/scripts/run-twitter-search-policy-tests.sh"; \
 	else \
 		echo "swiftc unavailable; executable policy tests skipped"; \
